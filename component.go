@@ -309,8 +309,9 @@ func (c *Component) Render() {
 
 	width := c.box.Width()
 	height := c.box.Height()
-	firstBlankRow := -1 // Will become the new value of c.firstBlankRow
-	var a, b int        // The start and end index of the content substring we are rendering
+	firstBlankRow := -1                      // Will become the new value of c.firstBlankRow
+	firstBlankColumns := make([]int, height) // Will become the new value of c.firstBlankColumns
+	var a, b int                             // The start and end index of the content substring we are rendering
 	var contentLen int
 	var blankLine string
 
@@ -324,12 +325,6 @@ func (c *Component) Render() {
 
 	if !isBlank {
 		contentLen = c.content.displayLen()
-		if c.firstBlankColumns == nil || len(c.firstBlankColumns) != height {
-			c.firstBlankColumns = make([]int, height)
-			for i := range c.firstBlankColumns {
-				c.firstBlankColumns[i] = -1
-			}
-		}
 	}
 
 	// Construct our output line-by-line
@@ -338,6 +333,8 @@ func (c *Component) Render() {
 		case <-ctx.Done():
 			return
 		default:
+			// Uncomment to view rendering order and test race conditions
+			// time.Sleep(5 * time.Millisecond)
 		}
 
 		// Position the cursor at the location of the current row
@@ -375,14 +372,15 @@ func (c *Component) Render() {
 				a = b
 			}
 
-			if c.firstBlankColumns[row] != -1 {
+			// If we know where we already rendered blank space, update spaces accoringly
+			if c.firstBlankColumns != nil && row < len(c.firstBlankColumns) {
 				if c.firstBlankColumns[row] <= len(result) {
 					spaces = 0
 				} else {
 					spaces = c.firstBlankColumns[row] - len(result)
 				}
 			}
-			c.firstBlankColumns[row] = len(result)
+			firstBlankColumns[row] = len(result)
 
 			// Clear the remainder of the current line
 			if spaces > 0 {
@@ -414,12 +412,13 @@ func (c *Component) Render() {
 	}
 
 Output:
-	// Update the location of the first blank row from this render
+	// Update the locations of blank space from this render
 	if isBlank {
 		c.firstBlankRow = 0
 	} else {
 		c.firstBlankRow = firstBlankRow
 	}
+	c.firstBlankColumns = firstBlankColumns
 
 	// Output to stdout
 	fmt.Print(builder.String())
