@@ -29,19 +29,34 @@ func main() {
 	tui.Screen.AddChild(sidebar.Outer)
 
 	items := make([]string, 10)
+	selectedItem := 0
 	for i := range items {
 		items[i] = fmt.Sprintf("Menu item %d", i)
 	}
-	menu := components.NewMenu(items)
-	menu.SetSelectedColorFunc(color.New(color.BgYellow).Add(color.FgBlack).SprintFunc())
-	selectedItem := 0
-	menu.AddSelection(selectedItem)
-	sidebar.Inner.AddChild(menu.Outer)
+	sidebarMenu := components.NewMenu(items)
+	sidebarMenu.SetSelectedColorFunc(color.New(color.BgYellow).Add(color.FgBlack).SprintFunc())
+	sidebarMenu.AddSelection(selectedItem)
+	sidebar.Inner.AddChild(sidebarMenu.Outer)
 
-	pane := components.NewBorders()
-	pane.Inner.SetIsVertical(true)
-	pane.Outer.SetGrow(3)
-	tui.Screen.AddChild(pane.Outer)
+	mainArea := components.NewBorders()
+	mainArea.Inner.SetIsVertical(true)
+	mainArea.Outer.SetGrow(3)
+	tui.Screen.AddChild(mainArea.Outer)
+
+	mainContent := tui.NewComponent()
+	mainArea.Inner.AddChild(mainContent)
+
+	stylesMenuArea := tui.NewComponent()
+	stylesMenuArea.SetLength(1)
+	mainArea.Inner.AddChild(stylesMenuArea)
+
+	stylesMenu := components.NewMenu([]string{" [1] Dark Theme ", " [2] Light Theme ", " [3] Epic Theme "})
+	stylesMenu.SetIsVertical(false)
+	stylesMenu.SetSelectedColorFunc(color.New(color.Bold).Add(color.FgMagenta).SprintFunc())
+	stylesMenu.AddSelection(0)
+	stylesMenuArea.AddChild(tui.NewComponent())
+	stylesMenuArea.AddChild(stylesMenu.Outer)
+	stylesMenuArea.AddChild(tui.NewComponent())
 
 	tui.Screen.UpdateLayout()
 	tui.Screen.Render()
@@ -58,7 +73,7 @@ func main() {
 		}
 
 		if char == 'j' || char == 'k' {
-			menu.RemoveSelection(selectedItem)
+			sidebarMenu.RemoveSelection(selectedItem)
 			if char == 'j' {
 				selectedItem++
 			} else {
@@ -69,24 +84,43 @@ func main() {
 			} else if selectedItem >= len(items) {
 				selectedItem = len(items) - 1
 			}
-			menu.AddSelection(selectedItem)
+			sidebarMenu.AddSelection(selectedItem)
 
-			pane.Inner.SetContent(strings.Repeat(fmt.Sprintf("You have selected menu item %d %s\n", selectedItem, strings.Repeat("-", selectedItem)), selectedItem+1))
+			mainContent.SetContent(strings.Repeat(fmt.Sprintf("You have selected menu item %d %s\n", selectedItem, strings.Repeat("-", selectedItem)), selectedItem+1))
 
-			menu.RenderChanges()
-			pane.Inner.Render()
+			sidebarMenu.RenderChanges()
+			mainArea.Inner.Render()
 
 			continue
 		}
 
 		if char == 'h' || char == 'l' {
 			if char == 'h' {
-				pane.Outer.SetGrow(pane.Outer.Grow() + 0.1)
+				mainArea.Outer.SetGrow(mainArea.Outer.Grow() + 0.1)
 			} else {
-				pane.Outer.SetGrow(pane.Outer.Grow() - 0.1)
+				mainArea.Outer.SetGrow(mainArea.Outer.Grow() - 0.1)
 			}
 			tui.Screen.UpdateLayout()
 			tui.Screen.Render()
+
+			continue
+		}
+
+		if char == '1' || char == '2' || char == '3' {
+			stylesMenu.RemoveAllSelections()
+			stylesMenu.AddSelection(int(char - '1'))
+
+			switch char {
+			case '1':
+				mainContent.SetColorFunc(nil)
+			case '2':
+				mainContent.SetColorFunc(color.New(color.BgWhite).Add(color.FgBlack).SprintFunc())
+			case '3':
+				mainContent.SetColorFunc(color.New(color.BgGreen).Add(color.FgBlack).SprintFunc())
+			}
+
+			stylesMenu.RenderChanges()
+			mainContent.Render()
 		}
 
 	}
