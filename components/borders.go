@@ -122,7 +122,7 @@ func (b *Borders) horizontalBorderSection(box *flextui.Box) string {
 
 // ContentFunc to render a vertical bar with corners
 func (b *Borders) verticalBorderSection(box *flextui.Box, isLeft bool) string {
-	middle := strings.Repeat(b.symbols.v, max(box.Height()-2))
+	middle := strings.Repeat(b.symbols.v, max(0, box.Height()-2))
 	if isLeft {
 		return b.symbols.tl + middle + b.symbols.bl
 	} else {

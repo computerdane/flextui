@@ -26,11 +26,11 @@ func (b *Box) Right() int {
 }
 
 func (b *Box) Width() int {
-	return b.right - b.left
+	return max(0, b.right-b.left)
 }
 
 func (b *Box) Height() int {
-	return b.bottom - b.top
+	return max(0, b.bottom-b.top)
 }
 
 func (b *Box) ToString() string {
