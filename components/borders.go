@@ -118,7 +118,9 @@ func (b *Borders) updateContentFuncs() {
 	b.titleRight.SetContentFunc(b.horizontalBorderSection)
 	if b.titleIsOnBottom {
 		b.top.SetContentFunc(b.horizontalBorderSection)
+		b.bottom.SetContentFunc(nil)
 	} else {
+		b.top.SetContentFunc(nil)
 		b.bottom.SetContentFunc(b.horizontalBorderSection)
 	}
 	b.left.SetContentFunc(func(box *flextui.Box) string { return b.verticalBorderSection(box, true) })
@@ -130,11 +132,15 @@ func (b *Borders) SetTitle(title string) {
 	b.title.SetLength(len(title))
 }
 
-func (b *Borders) SetTitleIsOnBottom(titleOnBottom bool) {
-	if b.titleIsOnBottom != titleOnBottom {
+func (b *Borders) SetTitleIsOnBottom(titleIsOnBottom bool) {
+	if b.titleIsOnBottom != titleIsOnBottom {
 		b.top, b.bottom = b.bottom, b.top
+		b.midSection.RemoveChildren()
+		b.midSection.AddChild(b.top)
+		b.midSection.AddChild(b.innerWrapper)
+		b.midSection.AddChild(b.bottom)
 	}
-	b.titleIsOnBottom = titleOnBottom
+	b.titleIsOnBottom = titleIsOnBottom
 	b.updateContentFuncs()
 }
 

@@ -91,6 +91,15 @@ func (c *Component) SetLength(length int) {
 	c.length = length
 }
 
+func (c *Component) RemoveChildren() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.childrenGrowSum = 0
+	c.childrenLengthSum = 0
+	c.children = nil
+}
+
 func (c *Component) AddChild(child *Component) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
