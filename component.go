@@ -37,7 +37,8 @@ type Component struct {
 	length            int
 	childrenLengthSum int
 
-	firstBlankRow int
+	firstBlankRow     int
+	firstBlankColumns []int
 
 	cancelRender context.CancelFunc
 
@@ -111,7 +112,9 @@ func (c *Component) SetColorFunc(colorFunc func(a ...any) string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.firstBlankRow = -1 // Ensure that we re-render blank content with the new color
+	// Ensure that we re-render blank content with the new color
+	c.firstBlankRow = -1
+	c.firstBlankColumns = nil
 	c.colorFunc = colorFunc
 }
 
@@ -268,8 +271,9 @@ func (c *Component) UpdateLayout() {
 		c.content.setValue(&value)
 	}
 
-	// Unset the first blank row since the layout may have changed
+	// Reset the blank areas since the layout may have changed
 	c.firstBlankRow = -1
+	c.firstBlankColumns = nil
 
 	// Recursively update all children
 	if c.children != nil {
@@ -304,6 +308,7 @@ func (c *Component) Render() {
 	var builder strings.Builder
 
 	width := c.box.Width()
+	height := c.box.Height()
 	firstBlankRow := -1 // Will become the new value of c.firstBlankRow
 	var a, b int        // The start and end index of the content substring we are rendering
 	var contentLen int
@@ -319,10 +324,16 @@ func (c *Component) Render() {
 
 	if !isBlank {
 		contentLen = c.content.displayLen()
+		if c.firstBlankColumns == nil || len(c.firstBlankColumns) != height {
+			c.firstBlankColumns = make([]int, height)
+			for i := range c.firstBlankColumns {
+				c.firstBlankColumns[i] = -1
+			}
+		}
 	}
 
 	// Construct our output line-by-line
-	for row := 0; row < c.box.bottom-c.box.top; row++ {
+	for row := 0; row < height; row++ {
 		select {
 		case <-ctx.Done():
 			return
@@ -363,6 +374,15 @@ func (c *Component) Render() {
 				spaces = b - contentLen
 				a = b
 			}
+
+			if c.firstBlankColumns[row] != -1 {
+				if c.firstBlankColumns[row] <= len(result) {
+					spaces = 0
+				} else {
+					spaces = c.firstBlankColumns[row] - len(result)
+				}
+			}
+			c.firstBlankColumns[row] = len(result)
 
 			// Clear the remainder of the current line
 			if spaces > 0 {
