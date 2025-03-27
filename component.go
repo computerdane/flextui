@@ -164,9 +164,6 @@ func (c *Component) AddChild(child *Component) {
 	defer c.mu.Unlock()
 
 	child.parent = c
-	if c.children == nil {
-		c.children = []*Component{}
-	}
 	c.children = append(c.children, child)
 	if child.length == 0 {
 		c.childrenGrowSum += child.grow
@@ -276,10 +273,8 @@ func (c *Component) UpdateLayout() {
 	c.firstBlankColumns = nil
 
 	// Recursively update all children
-	if c.children != nil {
-		for _, child := range c.children {
-			child.UpdateLayout()
-		}
+	for _, child := range c.children {
+		child.UpdateLayout()
 	}
 }
 
@@ -301,10 +296,9 @@ func (c *Component) Render() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	var ctx context.Context
-	ctx, c.cancelRender = context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
+	c.cancelRender = cancel
 
-	// Use a string builder so we don't flood stdout with print calls
 	var builder strings.Builder
 
 	width := c.box.Width()
@@ -425,9 +419,7 @@ Output:
 
 RenderChildren:
 	// Recursively render all children
-	if c.children != nil {
-		for _, child := range c.children {
-			child.Render()
-		}
+	for _, child := range c.children {
+		child.Render()
 	}
 }
