@@ -352,10 +352,10 @@ func (c *Component) Render() {
 		// We will print a substring of c.content from a:b
 		b = a + width
 
-		// Print content if it exists, and print spaces where there isn't content
+		// Print content if it exists, and print blank space where there isn't content
 		var result string
 		if a < contentLen {
-			var spaces int // The number of spaces to append to the result
+			var nBlanks int // The number of blank characters to append to the result
 
 			// Get the section of content that should be rendered on this line
 			substr := c.content.displaySubstring(a, min(contentLen, b))
@@ -364,27 +364,27 @@ func (c *Component) Render() {
 			newlineIndex := strings.Index(substr, "\n")
 			if newlineIndex != -1 {
 				result = substr[:newlineIndex]
-				spaces = b - a - newlineIndex
+				nBlanks = b - a - newlineIndex
 				a += newlineIndex + 1
 			} else {
 				result = substr
-				spaces = b - contentLen
+				nBlanks = b - contentLen
 				a = b
 			}
 
-			// If we know where we already rendered blank space, update spaces accoringly
+			// If we know where we already rendered blank space, update nBlanks accoringly
 			if c.firstBlankColumns != nil && row < len(c.firstBlankColumns) {
 				if c.firstBlankColumns[row] <= len(result) {
-					spaces = 0
+					nBlanks = 0
 				} else {
-					spaces = c.firstBlankColumns[row] - len(result)
+					nBlanks = c.firstBlankColumns[row] - len(result)
 				}
 			}
 			firstBlankColumns[row] = len(result)
 
 			// Clear the remainder of the current line
-			if spaces > 0 {
-				result += strings.Repeat(BLANK_CHAR, spaces)
+			if nBlanks > 0 {
+				result += strings.Repeat(BLANK_CHAR, nBlanks)
 			}
 		} else {
 			// If we are done rendering content, save the first blank row
