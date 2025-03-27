@@ -316,7 +316,7 @@ func (c *Component) Render() {
 	var blankLine string
 
 	// We want to handle things more efficiently if the content is blank
-	isBlank := c.content.value == nil || strings.TrimSpace(*c.content.value) == ""
+	isBlank := c.content.value == nil || *c.content.value == ""
 
 	// If the screen is already clear, skip rendering
 	if isBlank && c.firstBlankRow == 0 {
