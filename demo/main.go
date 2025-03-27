@@ -28,17 +28,15 @@ func main() {
 	sidebar.SetTitleColorFunc(color.New(color.Bold).Add(color.FgBlue).SprintFunc())
 	tui.Screen.AddChild(sidebar.Outer)
 
-	items := make([]*tui.Component, 10)
+	items := make([]string, 10)
 	for i := range items {
-		items[i] = tui.NewComponent()
-		items[i].SetContent(fmt.Sprintf("Menu item %d", i))
-		items[i].SetLength(1)
-		sidebar.Inner.AddChild(items[i])
+		items[i] = fmt.Sprintf("Menu item %d", i)
 	}
-	sidebar.Inner.AddChild(tui.NewComponent())
+	menu := components.NewMenu(items)
+	menu.SetSelectedColorFunc(color.New(color.BgYellow).Add(color.FgBlack).SprintFunc())
 	selectedItem := 0
-	selectedItemStyle := color.New(color.BgYellow).Add(color.FgBlack).SprintFunc()
-	items[selectedItem].SetColorFunc(selectedItemStyle)
+	menu.AddSelection(selectedItem)
+	sidebar.Inner.AddChild(menu.Outer)
 
 	pane := components.NewBorders()
 	pane.Inner.SetIsVertical(true)
@@ -60,8 +58,7 @@ func main() {
 		}
 
 		if char == 'j' || char == 'k' {
-			items[selectedItem].SetColorFunc(nil)
-			items[selectedItem].Render()
+			menu.RemoveSelection(selectedItem)
 			if char == 'j' {
 				selectedItem++
 			} else {
@@ -72,10 +69,11 @@ func main() {
 			} else if selectedItem >= len(items) {
 				selectedItem = len(items) - 1
 			}
-			items[selectedItem].SetColorFunc(selectedItemStyle)
-			items[selectedItem].Render()
+			menu.AddSelection(selectedItem)
 
 			pane.Inner.SetContent(strings.Repeat(fmt.Sprintf("You have selected menu item %d %s\n", selectedItem, strings.Repeat("-", selectedItem)), selectedItem+1))
+
+			menu.RenderChanges()
 			pane.Inner.Render()
 
 			continue

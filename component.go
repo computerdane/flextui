@@ -58,6 +58,18 @@ func (c *Component) Grow() float64 {
 	return c.grow
 }
 
+func (c *Component) IsVertical() bool {
+	return c.isVertical
+}
+
+func (c *Component) Key() string {
+	return c.key
+}
+
+func (c *Component) Children() []*Component {
+	return c.children
+}
+
 // Change whether child Components are laid out vertically or horizontally.
 func (c *Component) SetIsVertical(isVertical bool) {
 	c.mu.Lock()

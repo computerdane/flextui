@@ -15,6 +15,10 @@ func init() {
 	Screen = NewComponent()
 }
 
+func GetComponentByKey(key string) *Component {
+	return components[key]
+}
+
 func HideCursor() {
 	fmt.Print("\033[?25l")
 }
