@@ -75,7 +75,7 @@ func main() {
 			items[selectedItem].SetColorFunc(selectedItemStyle)
 			items[selectedItem].Render()
 
-			pane.Inner.SetContent(strings.Repeat(fmt.Sprintf("You have selected menu item %d\n", selectedItem), selectedItem+1))
+			pane.Inner.SetContent(strings.Repeat(fmt.Sprintf("You have selected menu item %d %s\n", selectedItem, strings.Repeat("-", selectedItem)), selectedItem+1))
 			pane.Inner.Render()
 
 			continue

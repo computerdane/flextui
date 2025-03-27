@@ -271,7 +271,7 @@ func (c *Component) Render() {
 				newlineIndex := strings.Index(substr, "\n")
 				if newlineIndex != -1 {
 					write(substr[:newlineIndex])
-					spaces = 0
+					spaces = b - a - newlineIndex
 					a += newlineIndex + 1
 				} else {
 					write(substr)
