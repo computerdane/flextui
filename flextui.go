@@ -34,7 +34,12 @@ func ShowCursor() {
 	fmt.Print("\033[?25h")
 }
 
-func HandleSignals() {
+// Handles SIGINT, SIGTERM, and SIGWINCH signals.
+//
+// - SIGINT/SIGTERM : shows the cursor and exits the current process
+//
+// - SIGWINCH : updates the screen layout and re-renders the whole screen
+func HandleShellSignals() {
 	stopChan := make(chan os.Signal, 1)
 	resizeChan := make(chan os.Signal, 1)
 
@@ -50,7 +55,7 @@ func HandleSignals() {
 	go func() {
 		for {
 			<-resizeChan
-			Screen.Update()
+			Screen.UpdateLayout()
 			Screen.Render()
 		}
 	}()

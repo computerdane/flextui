@@ -135,7 +135,7 @@ func (b *Borders) SetTitle(title string) {
 func (b *Borders) SetTitleIsOnBottom(titleIsOnBottom bool) {
 	if b.titleIsOnBottom != titleIsOnBottom {
 		b.top, b.bottom = b.bottom, b.top
-		b.midSection.RemoveChildren()
+		b.midSection.RemoveAllChildren()
 		b.midSection.AddChild(b.top)
 		b.midSection.AddChild(b.innerWrapper)
 		b.midSection.AddChild(b.bottom)

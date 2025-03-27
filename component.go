@@ -9,6 +9,14 @@ import (
 	"golang.org/x/term"
 )
 
+// A Component represents a rectangular area on the screen that can have a
+// parent Component and children Components. Components are laid out according
+// to simple rules inspired by CSS Flex. By default, Components lay out their
+// children horizontally and space them evenly. When properties are changed
+// on this Component, parent Components, or child Components, they will update
+// each others properties in order to lay themselves out correctly. After
+// changing any properties of a Component, the UpdateLayout() function must be
+// called to apply them before the next Render().
 type Component struct {
 	key        string
 	box        Box
@@ -40,6 +48,7 @@ func (c *Component) Grow() float64 {
 	return c.grow
 }
 
+// Change whether child Components are laid out vertically or horizontally
 func (c *Component) SetIsVertical(isVertical bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -47,6 +56,7 @@ func (c *Component) SetIsVertical(isVertical bool) {
 	c.isVertical = isVertical
 }
 
+// Set this Component's text content
 func (c *Component) SetContent(content string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -54,6 +64,9 @@ func (c *Component) SetContent(content string) {
 	c.content.setValue(&content)
 }
 
+// Set the Component's content based on its Box's dimensions. Useful for
+// creating responsive Components that fill their content depending on the
+// width/height of the Component.
 func (c *Component) SetContentFunc(updateFunc func(*Box) string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -61,6 +74,9 @@ func (c *Component) SetContentFunc(updateFunc func(*Box) string) {
 	c.content.updateFunc = updateFunc
 }
 
+// Set the Component's style using a function that can be called to add ANSI
+// color codes before rendering the Component's content. Pairs well with the
+// library github.com/fatih/color using a color's SprintFunc().
 func (c *Component) SetColorFunc(colorFunc func(a ...any) string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -68,6 +84,9 @@ func (c *Component) SetColorFunc(colorFunc func(a ...any) string) {
 	c.colorFunc = colorFunc
 }
 
+// Set the Component's grow property. All Components have a default grow of 1.
+// If a Component's grow is larger than others, it will take up more space
+// proportional to the total grow of its neighbors.
 func (c *Component) SetGrow(grow float64) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -78,6 +97,9 @@ func (c *Component) SetGrow(grow float64) {
 	c.grow = grow
 }
 
+// Set a custom length for a Component. Overrides the grow property and disables
+// flex-based layout for this Component only. Neighbor Components will still use
+// their grow properties for their layouts.
 func (c *Component) SetLength(length int) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -91,7 +113,8 @@ func (c *Component) SetLength(length int) {
 	c.length = length
 }
 
-func (c *Component) RemoveChildren() {
+// Removes all child Components from this Component
+func (c *Component) RemoveAllChildren() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -100,6 +123,8 @@ func (c *Component) RemoveChildren() {
 	c.children = nil
 }
 
+// Adds a child Component to this Component. The order in which AddChild() is
+// called will determine the order of the child Components' layout.
 func (c *Component) AddChild(child *Component) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -115,12 +140,16 @@ func (c *Component) AddChild(child *Component) {
 	c.childrenLengthSum += child.length
 }
 
-func (c *Component) Update() {
+// Updates the Box positions of this Component and all child Components.
+//
+// Useful for responding to layout changes triggered by screen resizing or user
+// actions.
+func (c *Component) UpdateLayout() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	if c.key == Screen.key {
-		// The Screen component should always fit the terminal size
+		// The Screen Component should always fit the terminal size
 		width, height, err := term.GetSize(int(os.Stdout.Fd()))
 		if err != nil {
 			fmt.Println("Error getting terminal size: ", err)
@@ -131,7 +160,7 @@ func (c *Component) Update() {
 		Screen.box.bottom = height
 		Screen.box.right = width
 	} else if c.parent != nil {
-		// All other components use a flex layout based on the parent's box
+		// All other Components use a flex layout based on the parent's box
 		nChildren := len(c.parent.children)
 		width := c.parent.box.Width()
 		height := c.parent.box.Height()
@@ -193,11 +222,13 @@ func (c *Component) Update() {
 	// Recursively update all children
 	if c.children != nil {
 		for _, child := range c.children {
-			child.Update()
+			child.UpdateLayout()
 		}
 	}
 }
 
+// Render this Component's content to the screen, and render all child
+// Components as well.
 func (c *Component) Render() {
 	c.mu.Lock()
 	defer c.mu.Unlock()

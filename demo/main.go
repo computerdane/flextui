@@ -17,7 +17,7 @@ func main() {
 
 	tui.HideCursor()
 	defer tui.ShowCursor()
-	tui.HandleSignals()
+	tui.HandleShellSignals()
 
 	sidebar := components.NewBorders()
 	sidebar.Inner.SetIsVertical(true)
@@ -45,7 +45,7 @@ func main() {
 	pane.Outer.SetGrow(3)
 	tui.Screen.AddChild(pane.Outer)
 
-	tui.Screen.Update()
+	tui.Screen.UpdateLayout()
 	tui.Screen.Render()
 
 	for {
@@ -87,7 +87,7 @@ func main() {
 			} else {
 				pane.Outer.SetGrow(pane.Outer.Grow() - 0.1)
 			}
-			tui.Screen.Update()
+			tui.Screen.UpdateLayout()
 			tui.Screen.Render()
 		}
 
