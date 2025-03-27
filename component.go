@@ -16,11 +16,11 @@ const BLANK_CHAR = " "
 // A Component represents a rectangular area on the screen that can have a
 // parent Component and children Components. Components are laid out according
 // to simple rules inspired by CSS Flex. By default, Components lay out their
-// children horizontally and space them evenly. When properties are changed
-// on this Component, parent Components, or child Components, they will update
+// children horizontally and space them evenly. When properties are changed on
+// this Component, parent Components, or child Components, they will update
 // each others properties in order to lay themselves out correctly. After
-// changing any properties of a Component, the UpdateLayout() function must be
-// called to apply them before the next Render().
+// changing any properties of a Component, the UpdateLayout() function must
+// be called to apply them before the next Render().
 type Component struct {
 	key        string
 	box        Box
@@ -104,9 +104,9 @@ func (c *Component) SetContentFunc(updateFunc func(*Box) string) {
 	c.content.updateFunc = updateFunc
 }
 
-// Set the Component's style using a function that can be called to add ANSI
-// color codes before rendering the Component's content. Pairs well with the
-// library github.com/fatih/color using a color's SprintFunc().
+// Set the Component's style using a function that can be called to add
+// ANSI color codes before rendering the Component's content. Pairs well
+// with the library github.com/fatih/color using a color's SprintFunc().
 func (c *Component) SetColorFunc(colorFunc func(a ...any) string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -128,9 +128,9 @@ func (c *Component) SetGrow(grow float64) {
 	c.grow = grow
 }
 
-// Set a custom length for a Component. Overrides the grow property and disables
-// flex-based layout for this Component only. Neighbor Components will still use
-// their grow properties for their layouts.
+// Set a custom length for a Component. Overrides the grow property and
+// disables flex-based layout for this Component only. Neighbor Components
+// will still use their grow properties for their layouts.
 func (c *Component) SetLength(length int) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -154,8 +154,8 @@ func (c *Component) RemoveAllChildren() {
 	c.children = nil
 }
 
-// Adds a child Component to this Component. The order in which AddChild() is
-// called will determine the order of the child Components' layout.
+// Adds a child Component to this Component. The order in which AddChild()
+// is called will determine the order of the child Components' layout.
 func (c *Component) AddChild(child *Component) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -173,8 +173,8 @@ func (c *Component) AddChild(child *Component) {
 
 // Updates the Box positions of this Component and all child Components.
 //
-// Useful for responding to layout changes triggered by screen resizing or user
-// actions.
+// Useful for responding to layout changes triggered by screen resizing or
+// user actions.
 func (c *Component) UpdateLayout() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
