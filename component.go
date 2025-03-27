@@ -213,11 +213,10 @@ func (c *Component) Render() {
 		builder.WriteString(fmt.Sprintf("\033[%d;%dH", c.box.top+row+1, c.box.left+1))
 
 		// We will print a substring of c.content from a:b
-		// a := row * width
 		b = a + width
 
 		// The number of spaces to print
-		spaces := 0
+		spaces := width
 
 		// Print content if it exists, and print spaces where there isn't content
 		if c.content.value != nil {
@@ -232,17 +231,14 @@ func (c *Component) Render() {
 				newlineIndex := strings.Index(substr, "\n")
 				if newlineIndex != -1 {
 					write(substr[:newlineIndex])
+					spaces = 0
 					a += newlineIndex + 1
 				} else {
 					write(substr)
 					spaces = b - contentLen
 					a = b
 				}
-			} else {
-				spaces = width
 			}
-		} else {
-			spaces = width
 		}
 		if spaces > 0 {
 			write(strings.Repeat(" ", spaces))
