@@ -2,6 +2,7 @@ package components
 
 import (
 	"strings"
+	"sync"
 
 	"github.com/computerdane/flextui"
 )
@@ -61,6 +62,8 @@ type Borders struct {
 	titleIsOnBottom bool
 
 	symbols *BordersSymbols
+
+	mu sync.Mutex
 }
 
 func NewBorders() *Borders {
@@ -148,12 +151,18 @@ func (b *Borders) updateContentFuncs() {
 
 // Set the title to be displayed on the top/bottom border.
 func (b *Borders) SetTitle(title string) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
 	b.title.SetContent(title)
 	b.title.SetLength(len(title))
 }
 
 // Set whether the title is shown on the top border or the bottom border.
 func (b *Borders) SetTitleIsOnBottom(titleIsOnBottom bool) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
 	if b.titleIsOnBottom != titleIsOnBottom {
 		// Swap the top/bottom Components and update their parent's children list
 		b.top, b.bottom = b.bottom, b.top
@@ -168,12 +177,18 @@ func (b *Borders) SetTitleIsOnBottom(titleIsOnBottom bool) {
 
 // Set the characters that compose the borders.
 func (b *Borders) SetBorderSymbols(symbols *BordersSymbols) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
 	b.symbols = symbols
 	b.updateContentFuncs()
 }
 
 // Set the ColorFunc for the borders. See [flextui.Component.SetColorFunc].
 func (b *Borders) SetColorFunc(colorFunc func(a ...any) string) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
 	b.top.SetColorFunc(colorFunc)
 	b.bottom.SetColorFunc(colorFunc)
 	b.left.SetColorFunc(colorFunc)
@@ -184,5 +199,8 @@ func (b *Borders) SetColorFunc(colorFunc func(a ...any) string) {
 
 // Set the ColorFunc for the title. See [flextui.Component.SetColorFunc].
 func (b *Borders) SetTitleColorFunc(colorFunc func(a ...any) string) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
 	b.title.SetColorFunc(colorFunc)
 }
