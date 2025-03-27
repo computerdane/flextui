@@ -10,6 +10,8 @@ import (
 	"golang.org/x/term"
 )
 
+const BLANK_CHAR = " "
+
 // A Component represents a rectangular area on the screen that can have a
 // parent Component and children Components. Components are laid out according
 // to simple rules inspired by CSS Flex. By default, Components lay out their
@@ -254,7 +256,7 @@ func (c *Component) UpdateLayout() {
 }
 
 func (c *Component) blankLine(width int) string {
-	blankLine := strings.Repeat(" ", width)
+	blankLine := strings.Repeat(BLANK_CHAR, width)
 	if c.colorFunc != nil {
 		blankLine = c.colorFunc(blankLine)
 	}
@@ -327,7 +329,7 @@ func (c *Component) Render() {
 
 			// Clear the remainder of the current line
 			if spaces > 0 {
-				result += strings.Repeat(" ", spaces)
+				result += strings.Repeat(BLANK_CHAR, spaces)
 			}
 		} else {
 			// If we are done rendering content, save the first blank row
