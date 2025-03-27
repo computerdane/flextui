@@ -249,6 +249,14 @@ func (c *Component) UpdateLayout() {
 	}
 }
 
+func (c *Component) blankLine(width int) string {
+	blankLine := strings.Repeat(" ", width)
+	if c.colorFunc != nil {
+		blankLine = c.colorFunc(blankLine)
+	}
+	return blankLine
+}
+
 // Render this Component's content to the screen, and render all child
 // Components as well.
 func (c *Component) Render() {
@@ -258,53 +266,70 @@ func (c *Component) Render() {
 	// Use a string builder so we don't flood stdout with print calls
 	var builder strings.Builder
 
-	var write func(string)
-	if c.colorFunc != nil {
-		write = func(s string) { builder.WriteString(c.colorFunc(s)) }
-	} else {
-		write = func(s string) { builder.WriteString(s) }
+	width := c.box.Width()
+	var a, b, contentLen int
+	var blankLine string
+
+	// We want to handle things more efficiently if the content is blank
+	isBlank := c.content.value == nil || strings.TrimSpace(*c.content.value) == ""
+	if !isBlank {
+		contentLen = c.content.displayLen()
 	}
 
-	builder.WriteString(fmt.Sprintf("\033[%d;%dH", c.box.top, c.box.left))
-
 	// Construct our output line-by-line
-	width := c.box.Width()
-	var a, b int
 	for row := 0; row < c.box.bottom-c.box.top; row++ {
 		// Position the cursor at the location of the current row
 		builder.WriteString(fmt.Sprintf("\033[%d;%dH", c.box.top+row+1, c.box.left+1))
 
+		// Simple handler for blank content
+		if isBlank {
+			if blankLine == "" {
+				blankLine = c.blankLine(width)
+			}
+			builder.WriteString(blankLine)
+			continue
+		}
+
 		// We will print a substring of c.content from a:b
 		b = a + width
 
-		// The number of spaces to print
-		spaces := width
-
 		// Print content if it exists, and print spaces where there isn't content
-		if c.content.value != nil {
-			contentLen := c.content.displayLen()
-			if a < contentLen {
-				substr := ""
-				if b <= contentLen {
-					substr = c.content.displaySubstring(a, b)
-				} else {
-					substr = c.content.displaySubstring(a, contentLen)
-				}
-				newlineIndex := strings.Index(substr, "\n")
-				if newlineIndex != -1 {
-					write(substr[:newlineIndex])
-					spaces = b - a - newlineIndex
-					a += newlineIndex + 1
-				} else {
-					write(substr)
-					spaces = b - contentLen
-					a = b
-				}
+		var result string
+		if a < contentLen {
+			var spaces int
+
+			substr := ""
+			if b <= contentLen {
+				substr = c.content.displaySubstring(a, b)
+			} else {
+				substr = c.content.displaySubstring(a, contentLen)
 			}
+			newlineIndex := strings.Index(substr, "\n")
+			if newlineIndex != -1 {
+				result = substr[:newlineIndex]
+				spaces = b - a - newlineIndex
+				a += newlineIndex + 1
+			} else {
+				result = substr
+				spaces = b - contentLen
+				a = b
+			}
+
+			if spaces > 0 {
+				result += strings.Repeat(" ", spaces)
+			}
+		} else {
+			if blankLine == "" {
+				blankLine = c.blankLine(width)
+			}
+			result = blankLine
 		}
-		if spaces > 0 {
-			write(strings.Repeat(" ", spaces))
+
+		if c.colorFunc != nil {
+			result = c.colorFunc(result)
 		}
+
+		builder.WriteString(result)
 	}
 
 	// Output to stdout

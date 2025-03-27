@@ -45,18 +45,19 @@ func main() {
 
 	mainContent := tui.NewComponent()
 	mainArea.Inner.AddChild(mainContent)
+	mainArea.Inner.AddChild(tui.NewComponent())
 
-	stylesMenuArea := tui.NewComponent()
-	stylesMenuArea.SetLength(1)
-	mainArea.Inner.AddChild(stylesMenuArea)
+	themesMenuArea := tui.NewComponent()
+	themesMenuArea.SetLength(1)
+	mainArea.Inner.AddChild(themesMenuArea)
 
-	stylesMenu := components.NewMenu([]string{" [1] Dark Theme ", " [2] Light Theme ", " [3] Epic Theme "})
-	stylesMenu.SetIsVertical(false)
-	stylesMenu.SetSelectedColorFunc(color.New(color.Bold).Add(color.FgMagenta).SprintFunc())
-	stylesMenu.AddSelection(0)
-	stylesMenuArea.AddChild(tui.NewComponent())
-	stylesMenuArea.AddChild(stylesMenu.Outer)
-	stylesMenuArea.AddChild(tui.NewComponent())
+	themesMenu := components.NewMenu([]string{" [1] Dark Theme ", " [2] Light Theme ", " [3] Epic Theme "})
+	themesMenu.SetIsVertical(false)
+	themesMenu.SetSelectedColorFunc(color.New(color.Bold).Add(color.FgMagenta).SprintFunc())
+	themesMenu.AddSelection(0)
+	themesMenuArea.AddChild(tui.NewComponent())
+	themesMenuArea.AddChild(themesMenu.Outer)
+	themesMenuArea.AddChild(tui.NewComponent())
 
 	tui.Screen.UpdateLayout()
 	tui.Screen.Render()
@@ -107,8 +108,8 @@ func main() {
 		}
 
 		if char == '1' || char == '2' || char == '3' {
-			stylesMenu.RemoveAllSelections()
-			stylesMenu.AddSelection(int(char - '1'))
+			themesMenu.RemoveAllSelections()
+			themesMenu.AddSelection(int(char - '1'))
 
 			switch char {
 			case '1':
@@ -119,8 +120,10 @@ func main() {
 				mainContent.SetColorFunc(color.New(color.BgGreen).Add(color.FgBlack).SprintFunc())
 			}
 
-			stylesMenu.RenderChanges()
+			themesMenu.RenderChanges()
 			mainContent.Render()
+
+			continue
 		}
 
 	}
