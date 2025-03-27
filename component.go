@@ -224,6 +224,24 @@ func (c *Component) UpdateLayout() {
 			// The last child should always align its bottom/right with the parent
 			c.box.bottom = c.parent.box.bottom
 			c.box.right = c.parent.box.right
+
+			// If the last child has a fixed length, is not the only child, and has any neighbor with a flex layout, snap it to the end of the parent
+			if c.length != 0 && nChildren != 1 {
+				hasFlexNeighbor := false
+				for _, neighbor := range c.parent.children {
+					if neighbor.length == 0 {
+						hasFlexNeighbor = true
+						break
+					}
+				}
+				if hasFlexNeighbor {
+					if c.parent.isVertical {
+						c.box.top = c.box.bottom - c.length
+					} else {
+						c.box.left = c.box.right - c.length
+					}
+				}
+			}
 		} else {
 			// Ensure we use the parent box's position for the cross-axis, and use the computed length if c.length is not provided
 			if c.parent.isVertical {
