@@ -1,6 +1,7 @@
 package flextui
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -36,9 +37,11 @@ type Component struct {
 	length            int
 	childrenLengthSum int
 
-	mu sync.Mutex
-
 	firstBlankRow int
+
+	cancelRender context.CancelFunc
+
+	mu sync.Mutex
 }
 
 func NewComponent() *Component {
@@ -269,8 +272,15 @@ func (c *Component) blankLine(width int) string {
 // Render this Component's content to the screen, and render all child
 // Components as well.
 func (c *Component) Render() {
+	if c.cancelRender != nil {
+		c.cancelRender()
+	}
+
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
+	var ctx context.Context
+	ctx, c.cancelRender = context.WithCancel(context.Background())
 
 	// Use a string builder so we don't flood stdout with print calls
 	var builder strings.Builder
@@ -295,6 +305,12 @@ func (c *Component) Render() {
 
 	// Construct our output line-by-line
 	for row := 0; row < c.box.bottom-c.box.top; row++ {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
 		// Position the cursor at the location of the current row
 		builder.WriteString(fmt.Sprintf("\033[%d;%dH", c.box.top+row+1, c.box.left+1))
 
