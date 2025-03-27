@@ -1,6 +1,10 @@
 package components
 
-import "github.com/computerdane/flextui"
+import (
+	"sync"
+
+	"github.com/computerdane/flextui"
+)
 
 type Menu struct {
 	Outer *flextui.Component
@@ -11,6 +15,8 @@ type Menu struct {
 	selectedColorFunc func(a ...any) string
 
 	renderQueue map[string]struct{}
+
+	mu sync.Mutex
 }
 
 func NewMenu(items []string) *Menu {
@@ -45,6 +51,9 @@ func (m *Menu) items() []*flextui.Component {
 }
 
 func (m *Menu) SetIsVertical(isVertical bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	if m.Outer.IsVertical() != isVertical {
 		items := m.items()
 		if isVertical {
@@ -66,6 +75,9 @@ func (m *Menu) SetIsVertical(isVertical bool) {
 }
 
 func (m *Menu) SetColorFunc(colorFunc func(a ...any) string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	m.colorFunc = colorFunc
 	for i, c := range m.items() {
 		if _, exists := m.selectedIndices[i]; !exists {
@@ -76,6 +88,9 @@ func (m *Menu) SetColorFunc(colorFunc func(a ...any) string) {
 }
 
 func (m *Menu) SetSelectedColorFunc(colorFunc func(a ...any) string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	m.selectedColorFunc = colorFunc
 	for i, c := range m.items() {
 		if _, exists := m.selectedIndices[i]; exists {
@@ -86,6 +101,9 @@ func (m *Menu) SetSelectedColorFunc(colorFunc func(a ...any) string) {
 }
 
 func (m *Menu) AddSelection(index int) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	m.selectedIndices[index] = struct{}{}
 	c := m.items()[index]
 	c.SetColorFunc(m.selectedColorFunc)
@@ -93,6 +111,9 @@ func (m *Menu) AddSelection(index int) {
 }
 
 func (m *Menu) RemoveSelection(index int) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	delete(m.selectedIndices, index)
 	c := m.items()[index]
 	c.SetColorFunc(m.colorFunc)
@@ -100,6 +121,9 @@ func (m *Menu) RemoveSelection(index int) {
 }
 
 func (m *Menu) RemoveAllSelections() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	for i := range m.selectedIndices {
 		c := m.items()[i]
 		c.SetColorFunc(m.colorFunc)
@@ -109,6 +133,9 @@ func (m *Menu) RemoveAllSelections() {
 }
 
 func (m *Menu) RenderChanges() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	for key := range m.renderQueue {
 		c := flextui.GetComponentByKey(key)
 		if c != nil {

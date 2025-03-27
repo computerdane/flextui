@@ -89,8 +89,8 @@ func main() {
 
 			mainContent.SetContent(strings.Repeat(fmt.Sprintf("You have selected menu item %d %s\n\n", selectedItem, strings.Repeat("-", selectedItem)), selectedItem+1))
 
-			sidebarMenu.RenderChanges()
-			mainArea.Inner.Render()
+			go sidebarMenu.RenderChanges()
+			go mainArea.Inner.Render()
 
 			continue
 		}
@@ -102,7 +102,7 @@ func main() {
 				mainArea.Outer.SetGrow(mainArea.Outer.Grow() - 0.1)
 			}
 			tui.Screen.UpdateLayout()
-			tui.Screen.Render()
+			go tui.Screen.Render()
 
 			continue
 		}
@@ -120,8 +120,8 @@ func main() {
 				mainContent.SetColorFunc(color.New(color.BgGreen).Add(color.FgBlack).SprintFunc())
 			}
 
-			themesMenu.RenderChanges()
-			mainContent.Render()
+			go themesMenu.RenderChanges()
+			go mainContent.Render()
 
 			continue
 		}
