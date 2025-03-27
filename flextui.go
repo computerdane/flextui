@@ -5,8 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-
-	"github.com/google/uuid"
 )
 
 var components map[string]*Component // Look up components quickly using their key
@@ -15,15 +13,6 @@ var Screen *Component                // Parent of all components
 func init() {
 	components = make(map[string]*Component)
 	Screen = NewComponent()
-}
-
-func NewComponent() *Component {
-	c := &Component{
-		key:  uuid.NewString(),
-		grow: 1,
-	}
-	components[c.key] = c
-	return c
 }
 
 func HideCursor() {

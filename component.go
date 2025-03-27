@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/google/uuid"
 	"golang.org/x/term"
 )
 
@@ -34,6 +35,15 @@ type Component struct {
 	childrenLengthSum int
 
 	mu sync.Mutex
+}
+
+func NewComponent() *Component {
+	c := &Component{
+		key:  uuid.NewString(),
+		grow: 1,
+	}
+	components[c.key] = c
+	return c
 }
 
 func (c *Component) Box() *Box {
