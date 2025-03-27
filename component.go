@@ -247,6 +247,9 @@ func (c *Component) UpdateLayout() {
 		c.content.setValue(&value)
 	}
 
+	// Unset the first blank row since the layout may have changed
+	c.firstBlankRow = -1
+
 	// Recursively update all children
 	if c.children != nil {
 		for _, child := range c.children {
