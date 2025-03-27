@@ -23,7 +23,7 @@ func main() {
 	sidebar.Inner.SetIsVertical(true)
 	sidebar.SetTitle(" Sidebar ")
 	sidebar.SetTitleIsOnBottom(true)
-	sidebar.SetSymbols(components.BordersSymbols_Double)
+	sidebar.SetBorderSymbols(components.BordersSymbols_Double)
 	sidebar.SetColorFunc(color.New(color.FgRed).SprintFunc())
 	sidebar.SetTitleColorFunc(color.New(color.Bold).Add(color.FgBlue).SprintFunc())
 	tui.Screen.AddChild(sidebar.Outer)

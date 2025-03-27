@@ -48,7 +48,7 @@ func (c *Component) Grow() float64 {
 	return c.grow
 }
 
-// Change whether child Components are laid out vertically or horizontally
+// Change whether child Components are laid out vertically or horizontally.
 func (c *Component) SetIsVertical(isVertical bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -56,7 +56,7 @@ func (c *Component) SetIsVertical(isVertical bool) {
 	c.isVertical = isVertical
 }
 
-// Set this Component's text content
+// Set this Component's text content.
 func (c *Component) SetContent(content string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -113,7 +113,7 @@ func (c *Component) SetLength(length int) {
 	c.length = length
 }
 
-// Removes all child Components from this Component
+// Removes all child Components from this Component.
 func (c *Component) RemoveAllChildren() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
