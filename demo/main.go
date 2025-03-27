@@ -87,7 +87,7 @@ func main() {
 			}
 			sidebarMenu.AddSelection(selectedItem)
 
-			mainContent.SetContent(strings.Repeat(fmt.Sprintf("You have selected menu item %d %s\n", selectedItem, strings.Repeat("-", selectedItem)), selectedItem+1))
+			mainContent.SetContent(strings.Repeat(fmt.Sprintf("You have selected menu item %d %s\n\n", selectedItem, strings.Repeat("-", selectedItem)), selectedItem+1))
 
 			sidebarMenu.RenderChanges()
 			mainArea.Inner.Render()

@@ -35,12 +35,15 @@ type Component struct {
 	childrenLengthSum int
 
 	mu sync.Mutex
+
+	firstBlankRow int
 }
 
 func NewComponent() *Component {
 	c := &Component{
-		key:  uuid.NewString(),
-		grow: 1,
+		key:           uuid.NewString(),
+		grow:          1,
+		firstBlankRow: -1,
 	}
 	components[c.key] = c
 	return c
@@ -103,6 +106,7 @@ func (c *Component) SetColorFunc(colorFunc func(a ...any) string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	c.firstBlankRow = -1 // Ensure that we re-render blank content with the new color
 	c.colorFunc = colorFunc
 }
 
@@ -267,11 +271,19 @@ func (c *Component) Render() {
 	var builder strings.Builder
 
 	width := c.box.Width()
-	var a, b, contentLen int
+	firstBlankRow := -1 // Will become the new value of c.firstBlankRow
+	var a, b int        // The start and end index of the content substring we are rendering
+	var contentLen int
 	var blankLine string
 
 	// We want to handle things more efficiently if the content is blank
 	isBlank := c.content.value == nil || strings.TrimSpace(*c.content.value) == ""
+
+	// If the screen is already clear, skip rendering
+	if isBlank && c.firstBlankRow == 0 {
+		goto RenderChildren
+	}
+
 	if !isBlank {
 		contentLen = c.content.displayLen()
 	}
@@ -296,14 +308,12 @@ func (c *Component) Render() {
 		// Print content if it exists, and print spaces where there isn't content
 		var result string
 		if a < contentLen {
-			var spaces int
+			var spaces int // The number of spaces to append to the result
 
-			substr := ""
-			if b <= contentLen {
-				substr = c.content.displaySubstring(a, b)
-			} else {
-				substr = c.content.displaySubstring(a, contentLen)
-			}
+			// Get the section of content that should be rendered on this line
+			substr := c.content.displaySubstring(a, min(contentLen, b))
+
+			// Handle newlines by splitting the substr and rendering the remainder on the next iteration
 			newlineIndex := strings.Index(substr, "\n")
 			if newlineIndex != -1 {
 				result = substr[:newlineIndex]
@@ -315,16 +325,28 @@ func (c *Component) Render() {
 				a = b
 			}
 
+			// Clear the remainder of the current line
 			if spaces > 0 {
 				result += strings.Repeat(" ", spaces)
 			}
 		} else {
+			// If we are done rendering content, save the first blank row
+			if firstBlankRow == -1 {
+				firstBlankRow = row
+			}
+			// If we are beyond the first blank row from the previous render, skip the rest of this render
+			if c.firstBlankRow != -1 && c.firstBlankRow <= row {
+				goto Output
+			}
+
+			// Clear the current line
 			if blankLine == "" {
 				blankLine = c.blankLine(width)
 			}
 			result = blankLine
 		}
 
+		// Apply styling if necessary
 		if c.colorFunc != nil {
 			result = c.colorFunc(result)
 		}
@@ -332,9 +354,18 @@ func (c *Component) Render() {
 		builder.WriteString(result)
 	}
 
+Output:
+	// Update the location of the first blank row from this render
+	if isBlank {
+		c.firstBlankRow = 0
+	} else {
+		c.firstBlankRow = firstBlankRow
+	}
+
 	// Output to stdout
 	fmt.Print(builder.String())
 
+RenderChildren:
 	// Recursively render all children
 	if c.children != nil {
 		for _, child := range c.children {
