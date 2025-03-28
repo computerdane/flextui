@@ -79,28 +79,38 @@ func main() {
 		}
 
 		if char == 'j' || char == 'k' {
+			lastSelectedItem := selectedItem
+			scrolled := false
 			if char == 'j' {
 				if selectedItem == len(items)-1 {
 					continue
 				}
-				sidebarMenu.RemoveSelection(selectedItem)
 				selectedItem++
-				sidebarMenu.Outer.Scroll.Top++
+				if selectedItem >= sidebarMenu.Outer.Scroll.Top+sidebar.Inner.Box().Height() {
+					sidebarMenu.Outer.Scroll.Top++
+					scrolled = true
+				}
 			} else {
 				if selectedItem == 0 {
 					continue
 				}
-				sidebarMenu.RemoveSelection(selectedItem)
 				selectedItem--
-				sidebarMenu.Outer.Scroll.Top--
+				if selectedItem < sidebarMenu.Outer.Scroll.Top {
+					sidebarMenu.Outer.Scroll.Top--
+					scrolled = true
+				}
 			}
-			sidebarMenu.Outer.UpdateLayout()
+			sidebarMenu.RemoveSelection(lastSelectedItem)
 			sidebarMenu.AddSelection(selectedItem)
 
 			mainContent.SetContent(strings.Repeat(fmt.Sprintf("You have selected menu item %d %s\n\n", selectedItem, strings.Repeat("-", selectedItem)), selectedItem+1))
 
-			go sidebarMenu.Outer.Render()
-			// go sidebarMenu.RenderChanges()
+			if scrolled {
+				sidebarMenu.Outer.UpdateLayout()
+				go sidebarMenu.Outer.Render()
+			} else {
+				go sidebarMenu.RenderChanges()
+			}
 			go mainArea.Inner.Render()
 
 			continue
