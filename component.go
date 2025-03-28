@@ -22,7 +22,7 @@ const BLANK_CHAR = " "
 // changing any properties of a Component, the UpdateLayout() function must
 // be called to apply them before the next Render().
 type Component struct {
-	key        string
+	key        uuid.UUID
 	box        Box
 	isVertical bool
 	parent     *Component
@@ -47,7 +47,7 @@ type Component struct {
 
 func NewComponent() *Component {
 	c := &Component{
-		key:           uuid.NewString(),
+		key:           uuid.New(),
 		grow:          1,
 		firstBlankRow: -1,
 	}
@@ -71,7 +71,7 @@ func (c *Component) IsVertical() bool {
 	return c.isVertical
 }
 
-func (c *Component) Key() string {
+func (c *Component) Key() uuid.UUID {
 	return c.key
 }
 

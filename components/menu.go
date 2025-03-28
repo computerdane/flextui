@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/computerdane/flextui"
+	"github.com/google/uuid"
 )
 
 type Menu struct {
@@ -14,7 +15,7 @@ type Menu struct {
 	colorFunc         func(a ...any) string
 	selectedColorFunc func(a ...any) string
 
-	renderQueue map[string]struct{}
+	renderQueue map[uuid.UUID]struct{}
 
 	mu sync.Mutex
 }
@@ -22,7 +23,7 @@ type Menu struct {
 func NewMenu(items []string) *Menu {
 	m := Menu{
 		selectedIndices: make(map[int]struct{}),
-		renderQueue:     make(map[string]struct{}),
+		renderQueue:     make(map[uuid.UUID]struct{}),
 	}
 
 	m.Outer = flextui.NewComponent()
@@ -142,5 +143,5 @@ func (m *Menu) RenderChanges() {
 			go c.Render()
 		}
 	}
-	m.renderQueue = make(map[string]struct{})
+	m.renderQueue = make(map[uuid.UUID]struct{})
 }
