@@ -461,7 +461,7 @@ func (c *Component) Render() {
 		top := c.box.top + row
 
 		// Check if we are out of bounds
-		if top < bounds.top || top >= bounds.bottom || top+1 > bounds.bottom {
+		if top < bounds.top || top >= bounds.bottom || top+1 > bounds.bottom || c.box.left >= bounds.right {
 			continue
 		}
 
@@ -535,7 +535,7 @@ func (c *Component) Render() {
 			result = blankLine
 		}
 
-		c.clipWithBounds(&blankLine, &bounds)
+		c.clipWithBounds(&result, &bounds)
 		if c.colorFunc != nil {
 			result = c.colorFunc(result)
 		}
