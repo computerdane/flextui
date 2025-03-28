@@ -404,6 +404,9 @@ func (c *Component) Render() {
 		if isBlank {
 			if blankLine == "" {
 				blankLine = c.blankLine(width)
+				if c.colorFunc != nil {
+					blankLine = c.colorFunc(blankLine)
+				}
 			}
 			builder.WriteString(blankLine)
 			continue
