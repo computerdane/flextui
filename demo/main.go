@@ -28,7 +28,7 @@ func main() {
 	sidebar.SetTitleColorFunc(color.New(color.Bold).Add(color.FgBlue).SprintFunc())
 	tui.Screen.AddChild(sidebar.Outer)
 
-	items := make([]string, 10)
+	items := make([]string, 100)
 	selectedItem := 0
 	for i := range items {
 		items[i] = fmt.Sprintf("Menu item %d", i)
@@ -36,6 +36,7 @@ func main() {
 	sidebarMenu := components.NewMenu(items)
 	sidebarMenu.SetSelectedColorFunc(color.New(color.BgYellow).Add(color.FgBlack).SprintFunc())
 	sidebarMenu.AddSelection(selectedItem)
+	// sidebarMenu.SetIsVertical(false)
 	sidebar.Inner.AddChild(sidebarMenu.Outer)
 
 	mainArea := components.NewBorders()

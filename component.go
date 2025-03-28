@@ -296,12 +296,6 @@ func (c *Component) UpdateLayout() {
 				}
 			}
 		}
-
-		// Clamp box to parent box
-		c.box.top = max(c.parent.box.top, c.box.top)
-		c.box.left = max(c.parent.box.left, c.box.left)
-		c.box.right = min(c.parent.box.right, c.box.right)
-		c.box.bottom = min(c.parent.box.bottom, c.box.bottom)
 	}
 
 	// Update content according to contentFunc
@@ -377,6 +371,17 @@ func (c *Component) Render() {
 		contentLen = c.content.displayLen()
 	}
 
+	// Loop through all parents to find bounding box so we can detect overflow
+	bounds := c.box
+	parent := c.parent
+	for parent != nil {
+		bounds.top = min(parent.box.bottom, max(parent.box.top, bounds.top))
+		bounds.left = min(parent.box.right, max(parent.box.left, bounds.left))
+		bounds.bottom = min(parent.box.bottom, max(parent.box.top, bounds.bottom))
+		bounds.right = min(parent.box.right, max(parent.box.left, bounds.right))
+		parent = parent.parent
+	}
+
 	// Construct our output line-by-line
 	for row := startRow; row < height; row++ {
 		select {
@@ -390,8 +395,10 @@ func (c *Component) Render() {
 			// time.Sleep(5 * time.Millisecond)
 		}
 
+		top := c.box.top + row
+
 		// Position the cursor at the location of the current row
-		builder.WriteString(fmt.Sprintf("\033[%d;%dH", c.box.top+row+1, c.box.left+1))
+		builder.WriteString(fmt.Sprintf("\033[%d;%dH", top+1, c.box.left+1))
 
 		// Simple handler for blank content
 		if isBlank {
@@ -454,6 +461,14 @@ func (c *Component) Render() {
 				blankLine = c.blankLine(width)
 			}
 			result = blankLine
+		}
+
+		// Check if we are out of bounds
+		if top < bounds.top || top >= bounds.bottom || c.box.left < bounds.left || c.box.left >= bounds.right {
+			continue
+		}
+		if c.box.right > bounds.right {
+			result = result[:max(0, len(result)-(c.box.right-bounds.right))]
 		}
 
 		// Apply styling if necessary
