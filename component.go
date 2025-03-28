@@ -12,6 +12,10 @@ import (
 
 const BLANK_CHAR = " "
 
+const (
+	Event_LayoutUpdated = iota // Triggered at the very end of UpdateLayout()
+)
+
 // A Component represents a rectangular area on the screen that can have a
 // parent Component and children Components. Components are laid out according
 // to simple rules inspired by CSS Flex. By default, Components lay out their
@@ -53,13 +57,16 @@ type Component struct {
 
 	cancelRender context.CancelFunc
 
+	eventListeners map[int][]*func(*Component)
+
 	mu sync.Mutex
 }
 
 func NewComponent() *Component {
 	c := &Component{
-		grow:          1,
-		firstBlankRow: -1,
+		grow:           1,
+		firstBlankRow:  -1,
+		eventListeners: make(map[int][]*func(*Component)),
 	}
 	return c
 }
@@ -206,6 +213,29 @@ func (c *Component) AddChild(child *Component) {
 	c.childrenLengthSum += child.length
 }
 
+// Attach an event listener to this component. Use the flextui.Event_*
+// constants to choose an event.
+func (c *Component) AddEventListener(event int, listener *func(*Component)) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.eventListeners[event] = append(c.eventListeners[event], listener)
+}
+
+// Remove an event listener from this component. Use the flextui.Event_*
+// constants to choose an event.
+func (c *Component) RemoveEventListener(event int, listener *func(*Component)) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	for i, e := range c.eventListeners[event] {
+		if e == listener {
+			c.eventListeners[event] = append(c.eventListeners[event][:i], c.eventListeners[event][i+1:]...)
+			return
+		}
+	}
+}
+
 // Updates the Box positions of this Component and all child Components.
 //
 // Useful for responding to layout changes triggered by screen resizing or user
@@ -340,6 +370,10 @@ func (c *Component) UpdateLayout() {
 	// Recursively update all children
 	for _, child := range c.children {
 		child.UpdateLayout()
+	}
+
+	for _, handler := range c.eventListeners[Event_LayoutUpdated] {
+		(*handler)(c)
 	}
 }
 

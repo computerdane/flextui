@@ -39,6 +39,13 @@ func main() {
 	sidebarMenu.AddSelection(selectedItem)
 	// sidebarMenu.SetIsVertical(false)
 	// sidebarMenu.Outer.Scroll.Bottom = 80
+	listener := func(c *tui.Component) {
+		if selectedItem >= sidebarMenu.Outer.Scroll.Top+c.Box().Height() {
+			sidebarMenu.Outer.Scroll.Top = selectedItem - c.Box().Height() + 1
+		}
+	}
+	sidebar.Inner.AddEventListener(tui.Event_LayoutUpdated, &listener)
+	// sidebar.Inner.RemoveEventListener(tui.Event_LayoutUpdated, &listener)
 	sidebar.Inner.AddChild(sidebarMenu.Outer)
 
 	mainArea := components.NewBorders()
