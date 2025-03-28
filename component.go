@@ -335,7 +335,7 @@ func (c *Component) Render() {
 	for i, child := range c.children {
 		child.Render()
 		if i == len(c.children)-1 {
-			startRow = child.box.bottom
+			startRow = child.box.bottom - c.children[0].box.top
 		}
 	}
 
