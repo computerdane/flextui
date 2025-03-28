@@ -38,6 +38,7 @@ func main() {
 	sidebarMenu.SetSelectedColorFunc(color.New(color.BgYellow).Add(color.FgBlack).SprintFunc())
 	sidebarMenu.AddSelection(selectedItem)
 	// sidebarMenu.SetIsVertical(false)
+	// sidebarMenu.Outer.Scroll.Bottom = 80
 	sidebar.Inner.AddChild(sidebarMenu.Outer)
 
 	mainArea := components.NewBorders()
@@ -78,22 +79,28 @@ func main() {
 		}
 
 		if char == 'j' || char == 'k' {
-			sidebarMenu.RemoveSelection(selectedItem)
 			if char == 'j' {
+				if selectedItem == len(items)-1 {
+					continue
+				}
+				sidebarMenu.RemoveSelection(selectedItem)
 				selectedItem++
+				sidebarMenu.Outer.Scroll.Top++
 			} else {
+				if selectedItem == 0 {
+					continue
+				}
+				sidebarMenu.RemoveSelection(selectedItem)
 				selectedItem--
+				sidebarMenu.Outer.Scroll.Top--
 			}
-			if selectedItem < 0 {
-				selectedItem = 0
-			} else if selectedItem >= len(items) {
-				selectedItem = len(items) - 1
-			}
+			sidebarMenu.Outer.UpdateLayout()
 			sidebarMenu.AddSelection(selectedItem)
 
 			mainContent.SetContent(strings.Repeat(fmt.Sprintf("You have selected menu item %d %s\n\n", selectedItem, strings.Repeat("-", selectedItem)), selectedItem+1))
 
-			go sidebarMenu.RenderChanges()
+			go sidebarMenu.Outer.Render()
+			// go sidebarMenu.RenderChanges()
 			go mainArea.Inner.Render()
 
 			continue

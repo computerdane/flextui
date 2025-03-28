@@ -21,6 +21,8 @@ const BLANK_CHAR = " "
 // changing any properties of a Component, the UpdateLayout() function must
 // be called to apply them before the next Render().
 type Component struct {
+	Scroll Scroll
+
 	box        Box
 	isVertical bool
 	parent     *Component
@@ -303,6 +305,12 @@ func (c *Component) UpdateLayout() {
 				}
 			}
 		}
+
+		// Apply scrolling
+		c.box.top -= c.Scroll.Top
+		c.box.left -= c.Scroll.Left
+		c.box.right -= c.Scroll.Right
+		c.box.bottom -= c.Scroll.Bottom
 	}
 
 	// Update content according to contentFunc
@@ -324,6 +332,12 @@ func (c *Component) UpdateLayout() {
 func (c *Component) blankLine(width int) string {
 	blankLine := strings.Repeat(BLANK_CHAR, max(0, width))
 	return blankLine
+}
+
+func (c *Component) clipWithBounds(result *string, bounds *Box) {
+	clipA := max(0, min(len(*result)-1, bounds.left-c.box.left))
+	clipB := max(clipA, len(*result)-max(0, c.box.right-bounds.right))
+	*result = (*result)[clipA:clipB]
 }
 
 // Render this Component's content to the screen, and render all child
@@ -398,6 +412,11 @@ func (c *Component) Render() {
 
 		top := c.box.top + row
 
+		// Check if we are out of bounds
+		if top < bounds.top || top >= bounds.bottom || top+1 > bounds.bottom {
+			continue
+		}
+
 		// Position the cursor at the location of the current row
 		builder.WriteString(fmt.Sprintf("\033[%d;%dH", top+1, max(bounds.left, c.box.left)+1))
 
@@ -405,6 +424,7 @@ func (c *Component) Render() {
 		if isBlank {
 			if blankLine == "" {
 				blankLine = c.blankLine(width)
+				c.clipWithBounds(&blankLine, &bounds)
 				if c.colorFunc != nil {
 					blankLine = c.colorFunc(blankLine)
 				}
@@ -467,15 +487,7 @@ func (c *Component) Render() {
 			result = blankLine
 		}
 
-		// Check if we are out of bounds
-		if top < bounds.top || top >= bounds.bottom || top+1 > bounds.bottom {
-			continue
-		}
-		clipA := max(0, bounds.left-c.box.left)
-		clipB := max(clipA, len(result)-max(0, c.box.right-bounds.right))
-		result = result[clipA:clipB]
-
-		// Apply styling if necessary
+		c.clipWithBounds(&blankLine, &bounds)
 		if c.colorFunc != nil {
 			result = c.colorFunc(result)
 		}
