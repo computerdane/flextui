@@ -322,9 +322,6 @@ func (c *Component) UpdateLayout() {
 
 func (c *Component) blankLine(width int) string {
 	blankLine := strings.Repeat(BLANK_CHAR, max(0, width))
-	if c.colorFunc != nil {
-		blankLine = c.colorFunc(blankLine)
-	}
 	return blankLine
 }
 
