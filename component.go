@@ -344,13 +344,10 @@ func (c *Component) Render() {
 	for i, child := range c.children {
 		select {
 		case <-ctx.Done():
-			for _, renderingChild := range c.children[:i] {
-				renderingChild.cancelRender()
-			}
 			return
 		default:
 		}
-		go child.Render()
+		child.Render()
 		if i == len(c.children)-1 {
 			startRow = child.box.bottom - c.children[0].box.top
 		}
@@ -393,9 +390,6 @@ func (c *Component) Render() {
 	for row := startRow; row < height; row++ {
 		select {
 		case <-ctx.Done():
-			for _, renderingChild := range c.children {
-				renderingChild.cancelRender()
-			}
 			return
 		default:
 			// Uncomment to view rendering order and test race conditions
@@ -405,7 +399,7 @@ func (c *Component) Render() {
 		top := c.box.top + row
 
 		// Position the cursor at the location of the current row
-		builder.WriteString(fmt.Sprintf("\033[%d;%dH", top+1, c.box.left+1))
+		builder.WriteString(fmt.Sprintf("\033[%d;%dH", top+1, max(bounds.left, c.box.left)+1))
 
 		// Simple handler for blank content
 		if isBlank {
@@ -474,12 +468,12 @@ func (c *Component) Render() {
 		}
 
 		// Check if we are out of bounds
-		if top < bounds.top || top >= bounds.bottom || c.box.left < bounds.left || c.box.left >= bounds.right {
+		if top < bounds.top || top >= bounds.bottom || top+1 > bounds.bottom {
 			continue
 		}
-		if c.box.right > bounds.right {
-			result = result[:max(0, len(result)-(c.box.right-bounds.right))]
-		}
+		clipA := max(0, bounds.left-c.box.left)
+		clipB := max(clipA, len(result)-max(0, c.box.right-bounds.right))
+		result = result[clipA:clipB]
 
 		// Apply styling if necessary
 		if c.colorFunc != nil {
