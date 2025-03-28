@@ -344,7 +344,15 @@ func (c *Component) Render() {
 	// Recursively render all children
 	startRow := 0
 	for i, child := range c.children {
-		child.Render()
+		select {
+		case <-ctx.Done():
+			for _, renderingChild := range c.children[:i] {
+				renderingChild.cancelRender()
+			}
+			return
+		default:
+		}
+		go child.Render()
 		if i == len(c.children)-1 {
 			startRow = child.box.bottom - c.children[0].box.top
 		}
@@ -376,6 +384,9 @@ func (c *Component) Render() {
 	for row := startRow; row < height; row++ {
 		select {
 		case <-ctx.Done():
+			for _, renderingChild := range c.children {
+				renderingChild.cancelRender()
+			}
 			return
 		default:
 			// Uncomment to view rendering order and test race conditions
