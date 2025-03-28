@@ -28,7 +28,7 @@ func main() {
 	sidebar.SetTitleColorFunc(color.New(color.Bold).Add(color.FgBlue).SprintFunc())
 	tui.Screen.AddChild(sidebar.Outer)
 
-	items := make([]string, 100)
+	items := make([]string, 10)
 	selectedItem := 0
 	for i := range items {
 		items[i] = fmt.Sprintf("Menu item %d", i)
@@ -101,6 +101,7 @@ func main() {
 			} else {
 				mainArea.Outer.SetGrow(mainArea.Outer.Grow() - 0.1)
 			}
+
 			tui.Screen.UpdateLayout()
 			go tui.Screen.Render()
 

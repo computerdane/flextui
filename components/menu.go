@@ -35,7 +35,6 @@ func NewMenu(items []string) *Menu {
 		c.SetLength(1)
 		m.Outer.AddChild(c)
 	}
-	m.Outer.AddChild(flextui.NewComponent()) // spacer
 
 	m.Outer.SetLength(len(items))
 
@@ -46,17 +45,12 @@ func (m *Menu) enqueue(c *flextui.Component) {
 	m.renderQueue[c.Key()] = struct{}{}
 }
 
-func (m *Menu) items() []*flextui.Component {
-	children := m.Outer.Children()
-	return children[:len(children)-1]
-}
-
 func (m *Menu) SetIsVertical(isVertical bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	if m.Outer.IsVertical() != isVertical {
-		items := m.items()
+		items := m.Outer.Children()
 		if isVertical {
 			for _, c := range items {
 				c.SetLength(1)
@@ -80,7 +74,7 @@ func (m *Menu) SetColorFunc(colorFunc func(a ...any) string) {
 	defer m.mu.Unlock()
 
 	m.colorFunc = colorFunc
-	for i, c := range m.items() {
+	for i, c := range m.Outer.Children() {
 		if _, exists := m.selectedIndices[i]; !exists {
 			c.SetColorFunc(colorFunc)
 			m.enqueue(c)
@@ -93,7 +87,7 @@ func (m *Menu) SetSelectedColorFunc(colorFunc func(a ...any) string) {
 	defer m.mu.Unlock()
 
 	m.selectedColorFunc = colorFunc
-	for i, c := range m.items() {
+	for i, c := range m.Outer.Children() {
 		if _, exists := m.selectedIndices[i]; exists {
 			c.SetColorFunc(colorFunc)
 			m.enqueue(c)
@@ -106,7 +100,7 @@ func (m *Menu) AddSelection(index int) {
 	defer m.mu.Unlock()
 
 	m.selectedIndices[index] = struct{}{}
-	c := m.items()[index]
+	c := m.Outer.Children()[index]
 	c.SetColorFunc(m.selectedColorFunc)
 	m.enqueue(c)
 }
@@ -116,7 +110,7 @@ func (m *Menu) RemoveSelection(index int) {
 	defer m.mu.Unlock()
 
 	delete(m.selectedIndices, index)
-	c := m.items()[index]
+	c := m.Outer.Children()[index]
 	c.SetColorFunc(m.colorFunc)
 	m.enqueue(c)
 }
@@ -126,7 +120,7 @@ func (m *Menu) RemoveAllSelections() {
 	defer m.mu.Unlock()
 
 	for i := range m.selectedIndices {
-		c := m.items()[i]
+		c := m.Outer.Children()[i]
 		c.SetColorFunc(m.colorFunc)
 		m.enqueue(c)
 	}

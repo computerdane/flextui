@@ -221,48 +221,59 @@ func (c *Component) UpdateLayout() {
 			}
 		}
 		if c.parent.children[nChildren-1].key == c.key {
-			// The last child should always align its bottom/right with the parent
+			// The last child will, by default, align its bottom/right with the parent
 			c.box.bottom = c.parent.box.bottom
 			c.box.right = c.parent.box.right
 
-			// If the last child 1) has a fixed length, 2) is
-			// not the only child, and 3) has any neighbor with
-			// a flex layout, snap it to the end of the parent,
-			// and update its neighbors to align with itself.
-			if c.length != 0 && nChildren != 1 {
-				hasFlexNeighbor := false
-				for _, neighbor := range c.parent.children {
-					if neighbor.length == 0 {
-						hasFlexNeighbor = true
-						break
-					}
+			// Will be true if one of this component's neighbors is laid out using flex rules
+			hasFlexNeighbor := false
+			for _, neighbor := range c.parent.children[:nChildren-1] {
+				if neighbor.length == 0 {
+					hasFlexNeighbor = true
+					break
 				}
-				if hasFlexNeighbor {
+			}
+
+			// If the last child doesn't have a neighbor with a
+			// flex layout, and if it also has a fixed length,
+			// don't align it with the parent
+			if !hasFlexNeighbor && c.length != 0 {
+				if c.parent.isVertical {
+					c.box.bottom = c.box.top + c.length
+				} else {
+					c.box.right = c.box.left + c.length
+				}
+			}
+
+			// If the last child 1) has a neighbor with a flex
+			// layout, 2) has a fixed length, and 3) is not the
+			// only child, snap it to the end of the parent,
+			// and update its neighbors to align with itself.
+			if hasFlexNeighbor && c.length != 0 && nChildren != 1 {
+				if c.parent.isVertical {
+					c.box.top = c.box.bottom - c.length
+				} else {
+					c.box.left = c.box.right - c.length
+				}
+				// Align previous children with this Component's new position
+				for i := len(c.parent.children) - 2; i >= 0; i-- {
+					first := c.parent.children[i]
+					second := c.parent.children[i+1]
 					if c.parent.isVertical {
-						c.box.top = c.box.bottom - c.length
+						if first.box.bottom == second.box.top {
+							break
+						}
+						first.box.bottom = second.box.top
+						if first.length != 0 {
+							first.box.top = first.box.bottom - first.length
+						}
 					} else {
-						c.box.left = c.box.right - c.length
-					}
-					// Align previous children with this Component's new position
-					for i := len(c.parent.children) - 2; i >= 0; i-- {
-						first := c.parent.children[i]
-						second := c.parent.children[i+1]
-						if c.parent.isVertical {
-							if first.box.bottom == second.box.top {
-								break
-							}
-							first.box.bottom = second.box.top
-							if first.length != 0 {
-								first.box.top = first.box.bottom - first.length
-							}
-						} else {
-							if first.box.right == second.box.left {
-								break
-							}
-							first.box.right = second.box.left
-							if first.length != 0 {
-								first.box.left = first.box.right - first.length
-							}
+						if first.box.right == second.box.left {
+							break
+						}
+						first.box.right = second.box.left
+						if first.length != 0 {
+							first.box.left = first.box.right - first.length
 						}
 					}
 				}
