@@ -20,6 +20,9 @@ const BLANK_CHAR = " "
 // each others properties in order to lay themselves out correctly. After
 // changing any properties of a Component, the UpdateLayout() function must be
 // called to apply them before the next Render().
+//
+// For pre-built Components that are more advanced, see the
+// [github.com/computerdane/flextui/components] library.
 type Component struct {
 	Scroll Scroll
 
