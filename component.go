@@ -225,7 +225,10 @@ func (c *Component) UpdateLayout() {
 			c.box.bottom = c.parent.box.bottom
 			c.box.right = c.parent.box.right
 
-			// If the last child has a fixed length, is not the only child, and has any neighbor with a flex layout, snap it to the end of the parent
+			// If the last child 1) has a fixed length, 2) is
+			// not the only child, and 3) has any neighbor with
+			// a flex layout, snap it to the end of the parent,
+			// and update its neighbors to align with itself.
 			if c.length != 0 && nChildren != 1 {
 				hasFlexNeighbor := false
 				for _, neighbor := range c.parent.children {
@@ -239,6 +242,28 @@ func (c *Component) UpdateLayout() {
 						c.box.top = c.box.bottom - c.length
 					} else {
 						c.box.left = c.box.right - c.length
+					}
+					// Align previous children with this Component's new position
+					for i := len(c.parent.children) - 2; i >= 0; i-- {
+						first := c.parent.children[i]
+						second := c.parent.children[i+1]
+						if c.parent.isVertical {
+							if first.box.bottom == second.box.top {
+								break
+							}
+							first.box.bottom = second.box.top
+							if first.length != 0 {
+								first.box.top = first.box.bottom - first.length
+							}
+						} else {
+							if first.box.right == second.box.left {
+								break
+							}
+							first.box.right = second.box.left
+							if first.length != 0 {
+								first.box.left = first.box.right - first.length
+							}
+						}
 					}
 				}
 			}
@@ -305,6 +330,15 @@ func (c *Component) Render() {
 	ctx, cancel := context.WithCancel(context.Background())
 	c.cancelRender = cancel
 
+	// Recursively render all children
+	startRow := 0
+	for i, child := range c.children {
+		child.Render()
+		if i == len(c.children)-1 {
+			startRow = child.box.bottom
+		}
+	}
+
 	var builder strings.Builder
 
 	width := c.box.Width()
@@ -320,7 +354,7 @@ func (c *Component) Render() {
 
 	// If the screen is already clear, skip rendering
 	if isBlank && c.firstBlankRow == 0 {
-		goto RenderChildren
+		return
 	}
 
 	if !isBlank {
@@ -328,7 +362,7 @@ func (c *Component) Render() {
 	}
 
 	// Construct our output line-by-line
-	for row := 0; row < height; row++ {
+	for row := startRow; row < height; row++ {
 		select {
 		case <-ctx.Done():
 			return
@@ -422,10 +456,4 @@ Output:
 
 	// Output to stdout
 	fmt.Print(builder.String())
-
-RenderChildren:
-	// Recursively render all children
-	for _, child := range c.children {
-		child.Render()
-	}
 }
