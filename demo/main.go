@@ -17,7 +17,7 @@ func main() {
 
 	tui.HideCursor()
 	defer tui.ShowCursor()
-	defer fmt.Print("\033[H\033[2J")
+	defer tui.Clear()
 	tui.HandleShellSignals()
 
 	sidebar := components.NewBorders()

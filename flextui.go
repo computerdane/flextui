@@ -35,6 +35,10 @@ func CursorTo(row, col int) {
 	fmt.Printf("\033[%d;%dH", row, col)
 }
 
+func Clear() {
+	fmt.Print("\033[H\033[2J")
+}
+
 // Handles SIGINT, SIGTERM, and SIGWINCH signals.
 //
 // - SIGINT/SIGTERM : shows the cursor and exits the current process
@@ -50,7 +54,7 @@ func HandleShellSignals() {
 	go func() {
 		<-stopChan
 		ShowCursor()
-		fmt.Print("\033[H\033[2J")
+		Clear()
 		os.Exit(0)
 	}()
 
