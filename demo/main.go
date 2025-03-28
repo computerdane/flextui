@@ -34,18 +34,10 @@ func main() {
 	for i := range items {
 		items[i] = fmt.Sprintf("Menu item %d", i)
 	}
-	sidebarMenu := components.NewMenu(items)
-	sidebarMenu.SetSelectedColorFunc(color.New(color.BgYellow).Add(color.FgBlack).SprintFunc())
-	sidebarMenu.AddSelection(selectedItem)
-	// sidebarMenu.SetIsVertical(false)
-	// sidebarMenu.Outer.Scroll.Bottom = 80
-	listener := func(c *tui.Component) {
-		if selectedItem >= sidebarMenu.Outer.Scroll.Top+c.Box().Height() {
-			sidebarMenu.Outer.Scroll.Top = selectedItem - c.Box().Height() + 1
-		}
-	}
-	sidebar.Inner.AddEventListener(tui.Event_LayoutUpdated, &listener)
-	// sidebar.Inner.RemoveEventListener(tui.Event_LayoutUpdated, &listener)
+	sidebarMenu := components.NewScrollableMenu(items)
+	sidebarMenu.Menu.SetSelectedColorFunc(color.New(color.BgYellow).Add(color.FgBlack).SprintFunc())
+	sidebarMenu.SetSelectedItem(selectedItem)
+	sidebarMenu.SetIsVertical(false)
 	sidebar.Inner.AddChild(sidebarMenu.Outer)
 
 	mainArea := components.NewBorders()
@@ -86,38 +78,22 @@ func main() {
 		}
 
 		if char == 'j' || char == 'k' {
-			lastSelectedItem := selectedItem
-			scrolled := false
 			if char == 'j' {
 				if selectedItem == len(items)-1 {
 					continue
 				}
 				selectedItem++
-				if selectedItem >= sidebarMenu.Outer.Scroll.Top+sidebar.Inner.Box().Height() {
-					sidebarMenu.Outer.Scroll.Top++
-					scrolled = true
-				}
 			} else {
 				if selectedItem == 0 {
 					continue
 				}
 				selectedItem--
-				if selectedItem < sidebarMenu.Outer.Scroll.Top {
-					sidebarMenu.Outer.Scroll.Top--
-					scrolled = true
-				}
 			}
-			sidebarMenu.RemoveSelection(lastSelectedItem)
-			sidebarMenu.AddSelection(selectedItem)
+			sidebarMenu.SetSelectedItem(selectedItem)
 
 			mainContent.SetContent(strings.Repeat(fmt.Sprintf("You have selected menu item %d %s\n\n", selectedItem, strings.Repeat("-", selectedItem)), selectedItem+1))
 
-			if scrolled {
-				sidebarMenu.Outer.UpdateLayout()
-				go sidebarMenu.Outer.Render()
-			} else {
-				go sidebarMenu.RenderChanges()
-			}
+			go sidebarMenu.RenderChanges()
 			go mainArea.Inner.Render()
 
 			continue

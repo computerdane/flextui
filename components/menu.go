@@ -22,8 +22,9 @@ type Menu struct {
 func NewMenu(items []string) *Menu {
 	m := Menu{
 		selectedIndices: make(map[int]struct{}),
-		renderQueue:     make(map[*flextui.Component]struct{}),
 	}
+
+	m.clearRenderQueue()
 
 	m.Outer = flextui.NewComponent()
 	m.Outer.SetIsVertical(true)
@@ -38,6 +39,10 @@ func NewMenu(items []string) *Menu {
 	m.Outer.SetLength(len(items))
 
 	return &m
+}
+
+func (m *Menu) clearRenderQueue() {
+	m.renderQueue = make(map[*flextui.Component]struct{})
 }
 
 func (m *Menu) enqueue(c *flextui.Component) {
@@ -135,5 +140,5 @@ func (m *Menu) RenderChanges() {
 			go c.Render()
 		}
 	}
-	m.renderQueue = make(map[*flextui.Component]struct{})
+	m.clearRenderQueue()
 }

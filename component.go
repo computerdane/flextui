@@ -91,6 +91,10 @@ func (c *Component) Children() []*Component {
 	return c.children
 }
 
+func (c *Component) Length() int {
+	return c.length
+}
+
 // Change whether child Components are laid out vertically or horizontally.
 func (c *Component) SetIsVertical(isVertical bool) {
 	c.mu.Lock()
