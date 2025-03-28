@@ -21,6 +21,7 @@ func NewInput() *Input {
 
 	input.content = flextui.NewComponent()
 	input.content.SetLength(1)
+	input.content.SetContent("")
 	input.Outer.AddChild(input.content)
 
 	return &input
