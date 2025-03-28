@@ -28,6 +28,12 @@ type Component struct {
 	parent     *Component
 	children   []*Component
 
+	firstChild *Component
+	lastChild  *Component
+
+	prevNeighbor *Component
+	nextNeighbor *Component
+
 	content   content
 	colorFunc func(a ...any) string
 
@@ -152,6 +158,8 @@ func (c *Component) RemoveAllChildren() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	c.firstChild = nil
+	c.lastChild = nil
 	c.childrenGrowSum = 0
 	c.childrenLengthSum = 0
 	c.children = nil
@@ -163,6 +171,14 @@ func (c *Component) AddChild(child *Component) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	if c.firstChild == nil {
+		c.firstChild = child
+	}
+	if c.lastChild != nil {
+		child.prevNeighbor = c.lastChild
+		c.lastChild.nextNeighbor = child
+	}
+	c.lastChild = child
 	child.parent = c
 	c.children = append(c.children, child)
 	if child.length == 0 {
@@ -201,37 +217,34 @@ func (c *Component) UpdateLayout() {
 			width = max(0, int(float64(width-c.parent.childrenLengthSum)/(c.parent.childrenGrowSum/c.grow)))
 		}
 
-		if c.parent.children[0].key == c.key {
+		if c.parent.firstChild.key == c.key {
 			// The first child should have the same top/left as the parent
 			c.box.top = c.parent.box.top
 			c.box.left = c.parent.box.left
 		} else {
 			// The rest of the children should align the top/left of their box with the previous child's box
-			for i, prev := range c.parent.children[:nChildren-1] {
-				if c.parent.children[i+1].key == c.key {
-					if c.parent.isVertical {
-						c.box.top = prev.box.bottom
-						c.box.left = c.parent.box.left
-					} else {
-						c.box.top = c.parent.box.top
-						c.box.left = prev.box.right
-					}
-					break
-				}
+			if c.parent.isVertical {
+				c.box.top = c.prevNeighbor.box.bottom
+				c.box.left = c.parent.box.left
+			} else {
+				c.box.top = c.parent.box.top
+				c.box.left = c.prevNeighbor.box.right
 			}
 		}
-		if c.parent.children[nChildren-1].key == c.key {
+		if c.parent.lastChild.key == c.key {
 			// The last child will, by default, align its bottom/right with the parent
 			c.box.bottom = c.parent.box.bottom
 			c.box.right = c.parent.box.right
 
 			// Will be true if one of this component's neighbors is laid out using flex rules
 			hasFlexNeighbor := false
-			for _, neighbor := range c.parent.children[:nChildren-1] {
-				if neighbor.length == 0 {
+			prev := c.prevNeighbor
+			for prev != nil {
+				if prev.length == 0 {
 					hasFlexNeighbor = true
 					break
 				}
+				prev = prev.prevNeighbor
 			}
 
 			// If the last child doesn't have a neighbor with a
@@ -256,9 +269,9 @@ func (c *Component) UpdateLayout() {
 					c.box.left = c.box.right - c.length
 				}
 				// Align previous children with this Component's new position
-				for i := len(c.parent.children) - 2; i >= 0; i-- {
-					first := c.parent.children[i]
-					second := c.parent.children[i+1]
+				first := c.prevNeighbor
+				second := c
+				for first != nil && second != nil {
 					if c.parent.isVertical {
 						if first.box.bottom == second.box.top {
 							break
@@ -276,6 +289,8 @@ func (c *Component) UpdateLayout() {
 							first.box.left = first.box.right - first.length
 						}
 					}
+					first = first.prevNeighbor
+					second = second.prevNeighbor
 				}
 			}
 		} else {

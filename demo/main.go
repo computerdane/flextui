@@ -46,7 +46,9 @@ func main() {
 
 	mainContent := tui.NewComponent()
 	mainArea.Inner.AddChild(mainContent)
-	mainArea.Inner.AddChild(tui.NewComponent())
+	spacer := tui.NewComponent()
+	spacer.SetColorFunc(color.New(color.BgBlue).SprintFunc())
+	mainArea.Inner.AddChild(spacer)
 
 	themesMenuArea := tui.NewComponent()
 	themesMenuArea.SetLength(1)
