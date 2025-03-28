@@ -196,9 +196,9 @@ func (c *Component) UpdateLayout() {
 		width := c.parent.box.Width()
 		height := c.parent.box.Height()
 		if c.parent.isVertical {
-			height = int(float64(height-c.parent.childrenLengthSum) / (c.parent.childrenGrowSum / c.grow))
+			height = max(0, int(float64(height-c.parent.childrenLengthSum)/(c.parent.childrenGrowSum/c.grow)))
 		} else {
-			width = int(float64(width-c.parent.childrenLengthSum) / (c.parent.childrenGrowSum / c.grow))
+			width = max(0, int(float64(width-c.parent.childrenLengthSum)/(c.parent.childrenGrowSum/c.grow)))
 		}
 
 		if c.parent.children[0].key == c.key {
@@ -260,6 +260,12 @@ func (c *Component) UpdateLayout() {
 				}
 			}
 		}
+
+		// Clamp box to parent box
+		c.box.top = max(c.parent.box.top, c.box.top)
+		c.box.left = max(c.parent.box.left, c.box.left)
+		c.box.right = min(c.parent.box.right, c.box.right)
+		c.box.bottom = min(c.parent.box.bottom, c.box.bottom)
 	}
 
 	// Update content according to contentFunc
