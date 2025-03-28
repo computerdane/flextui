@@ -36,6 +36,7 @@ func HandleShellSignals() {
 	go func() {
 		<-stopChan
 		ShowCursor()
+		fmt.Print("\033[H\033[2J")
 		os.Exit(0)
 	}()
 
