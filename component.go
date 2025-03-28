@@ -34,6 +34,8 @@ type Component struct {
 	prevNeighbor *Component
 	nextNeighbor *Component
 
+	hasFlexChild bool
+
 	content   content
 	colorFunc func(a ...any) string
 
@@ -126,6 +128,9 @@ func (c *Component) SetGrow(grow float64) {
 	defer c.mu.Unlock()
 
 	if c.parent != nil {
+		c.parent.mu.Lock()
+		defer c.parent.mu.Unlock()
+
 		c.parent.childrenGrowSum += grow - c.grow
 	}
 	c.grow = grow
@@ -139,9 +144,24 @@ func (c *Component) SetLength(length int) {
 	defer c.mu.Unlock()
 
 	if c.parent != nil {
+		c.parent.mu.Lock()
+		defer c.parent.mu.Unlock()
+
 		c.parent.childrenLengthSum += length - c.length
 		if c.length == 0 && length > 0 {
+			c.parent.hasFlexChild = true
 			c.parent.childrenGrowSum -= c.grow
+		} else if c.length > 0 && length == 0 {
+			hasFlexChild := false
+			for _, child := range c.parent.children {
+				if child == c {
+					continue
+				}
+				if child.length == 0 {
+					hasFlexChild = true
+				}
+			}
+			c.parent.hasFlexChild = hasFlexChild
 		}
 	}
 	c.length = length
@@ -154,6 +174,7 @@ func (c *Component) RemoveAllChildren() {
 
 	c.firstChild = nil
 	c.lastChild = nil
+	c.hasFlexChild = false
 	c.childrenGrowSum = 0
 	c.childrenLengthSum = 0
 	c.children = nil
@@ -176,6 +197,7 @@ func (c *Component) AddChild(child *Component) {
 	child.parent = c
 	c.children = append(c.children, child)
 	if child.length == 0 {
+		c.hasFlexChild = true
 		c.childrenGrowSum += child.grow
 	}
 	c.childrenLengthSum += child.length
@@ -230,21 +252,10 @@ func (c *Component) UpdateLayout() {
 			c.box.bottom = c.parent.box.bottom
 			c.box.right = c.parent.box.right
 
-			// Will be true if one of this component's neighbors is laid out using flex rules
-			hasFlexNeighbor := false
-			prev := c.prevNeighbor
-			for prev != nil {
-				if prev.length == 0 {
-					hasFlexNeighbor = true
-					break
-				}
-				prev = prev.prevNeighbor
-			}
-
 			// If the last child doesn't have a neighbor with a
 			// flex layout, and if it also has a fixed length,
 			// don't align it with the parent
-			if !hasFlexNeighbor && c.length != 0 {
+			if !c.parent.hasFlexChild && c.length != 0 {
 				if c.parent.isVertical {
 					c.box.bottom = c.box.top + c.length
 				} else {
@@ -256,7 +267,7 @@ func (c *Component) UpdateLayout() {
 			// layout, 2) has a fixed length, and 3) is not the
 			// only child, snap it to the end of the parent,
 			// and update its neighbors to align with itself.
-			if hasFlexNeighbor && c.length != 0 && nChildren != 1 {
+			if c.parent.hasFlexChild && c.length != 0 && nChildren != 1 {
 				if c.parent.isVertical {
 					c.box.top = c.box.bottom - c.length
 				} else {
