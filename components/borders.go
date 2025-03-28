@@ -36,9 +36,9 @@ var BordersSymbols_Double = &BordersSymbols{
 }
 
 // A Component that is surrounded by borders. Borders.Outer is the top-level
-// parent component that should be added to the screen. Borders.Inner is
-// the Component inside the borders that you should fill with content or
-// other Components.
+// parent component that should be added to the screen. Borders.Inner is the
+// Component inside the borders that you should fill with content or other
+// Components.
 type Borders struct {
 	Outer *flextui.Component // Outer-most parent component
 	Inner *flextui.Component // Inner-most child component
