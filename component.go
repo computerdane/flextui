@@ -7,7 +7,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/google/uuid"
 	"golang.org/x/term"
 )
 
@@ -22,7 +21,6 @@ const BLANK_CHAR = " "
 // changing any properties of a Component, the UpdateLayout() function must
 // be called to apply them before the next Render().
 type Component struct {
-	key        uuid.UUID
 	box        Box
 	isVertical bool
 	parent     *Component
@@ -53,11 +51,9 @@ type Component struct {
 
 func NewComponent() *Component {
 	c := &Component{
-		key:           uuid.New(),
 		grow:          1,
 		firstBlankRow: -1,
 	}
-	components[c.key] = c
 	return c
 }
 
@@ -75,10 +71,6 @@ func (c *Component) Grow() float64 {
 
 func (c *Component) IsVertical() bool {
 	return c.isVertical
-}
-
-func (c *Component) Key() uuid.UUID {
-	return c.key
 }
 
 func (c *Component) Children() []*Component {
@@ -195,7 +187,7 @@ func (c *Component) UpdateLayout() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if c.key == Screen.key {
+	if c == Screen {
 		// The Screen Component should always fit the terminal size
 		width, height, err := term.GetSize(int(os.Stdout.Fd()))
 		if err != nil {
@@ -217,7 +209,7 @@ func (c *Component) UpdateLayout() {
 			width = max(0, int(float64(width-c.parent.childrenLengthSum)/(c.parent.childrenGrowSum/c.grow)))
 		}
 
-		if c.parent.firstChild.key == c.key {
+		if c.parent.firstChild == c {
 			// The first child should have the same top/left as the parent
 			c.box.top = c.parent.box.top
 			c.box.left = c.parent.box.left
@@ -231,7 +223,7 @@ func (c *Component) UpdateLayout() {
 				c.box.left = c.prevNeighbor.box.right
 			}
 		}
-		if c.parent.lastChild.key == c.key {
+		if c.parent.lastChild == c {
 			// The last child will, by default, align its bottom/right with the parent
 			c.box.bottom = c.parent.box.bottom
 			c.box.right = c.parent.box.right
