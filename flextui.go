@@ -1,10 +1,12 @@
 package flextui
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 var Screen *Component // Parent of all components
@@ -40,11 +42,21 @@ func HandleShellSignals() {
 		os.Exit(0)
 	}()
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	go func() {
 		for {
 			<-resizeChan
-			Screen.UpdateLayout()
-			Screen.Render()
+			cancel()
+			ctx, cancel = context.WithCancel(context.Background())
+			go func() {
+				select {
+				case <-time.After(100 * time.Millisecond):
+					Screen.UpdateLayout()
+					Screen.Render()
+				case <-ctx.Done():
+				}
+			}()
 		}
 	}()
 }
