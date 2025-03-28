@@ -421,6 +421,9 @@ func (c *Component) Render() {
 
 	var builder strings.Builder
 
+	// Always hide the cursor when rendering
+	builder.WriteString("\033[?25l")
+
 	width := c.box.Width()
 	height := c.box.Height()
 	firstBlankRow := -1                      // Will become the new value of c.firstBlankRow
@@ -558,4 +561,10 @@ Output:
 
 	// Output to stdout
 	fmt.Print(builder.String())
+
+	// Show the cursor again if it was previously already showing
+	if !cursorHidden {
+		ShowCursor()
+		CursorTo(cursorRow, cursorCol)
+	}
 }

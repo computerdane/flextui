@@ -11,16 +11,28 @@ import (
 
 var Screen *Component // Parent of all components
 
+var cursorHidden bool
+var cursorRow int
+var cursorCol int
+
 func init() {
 	Screen = NewComponent()
 }
 
 func HideCursor() {
+	cursorHidden = true
 	fmt.Print("\033[?25l")
 }
 
 func ShowCursor() {
+	cursorHidden = false
 	fmt.Print("\033[?25h")
+}
+
+func CursorTo(row, col int) {
+	cursorRow = row
+	cursorCol = col
+	fmt.Printf("\033[%d;%dH", row, col)
 }
 
 // Handles SIGINT, SIGTERM, and SIGWINCH signals.
