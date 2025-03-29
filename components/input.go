@@ -61,6 +61,13 @@ func (c *Input) SetContent(content string) {
 	c.updateScrollPos()
 }
 
+func (c *Input) SetColorFunc(colorFunc func(a ...any) string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.content.SetColorFunc(colorFunc)
+}
+
 func (c *Input) UpdateCursorPos() {
 	if flextui.CursorOwner == c.Outer {
 		flextui.CursorTo(c.content.Box().Top()+1, min(c.Outer.Box().Right(), c.content.Box().Left()+len(*c.content.Content())+1))
