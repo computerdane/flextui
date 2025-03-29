@@ -425,12 +425,10 @@ func (c *Component) Render() {
 	builder.WriteString("\033[?25l")
 
 	// Show the cursor again if it was previously already showing
-	defer func() {
-		if !cursorHidden {
-			ShowCursor()
-			CursorTo(cursorRow, cursorCol)
-		}
-	}()
+	if !cursorHidden {
+		defer CursorTo(cursorRow, cursorCol)
+		defer ShowCursor()
+	}
 
 	width := c.box.Width()
 	height := c.box.Height()
