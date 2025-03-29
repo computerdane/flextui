@@ -6,9 +6,14 @@ import (
 	"github.com/computerdane/flextui"
 )
 
+var inputWithCursor *Input
+var mu sync.Mutex
+
 type Input struct {
 	Outer   *flextui.Component
 	content *flextui.Component
+
+	hasCursor bool
 
 	mu sync.Mutex
 }
@@ -23,6 +28,11 @@ func NewInput() *Input {
 	input.content.SetLength(1)
 	input.content.SetContent("")
 	input.Outer.AddChild(input.content)
+
+	listener := func(c *flextui.Component) {
+		input.UpdateCursorPos()
+	}
+	input.content.AddEventListener(flextui.Event_LayoutUpdated, &listener)
 
 	return &input
 }
@@ -46,9 +56,28 @@ func (c *Input) SetContent(content string) {
 	}
 }
 
-func (c *Input) Focus() {
+func (c *Input) SetHasCursor(hasCursor bool) {
+	mu.Lock()
 	c.mu.Lock()
+	defer mu.Unlock()
 	defer c.mu.Unlock()
 
-	flextui.CursorTo(c.content.Box().Top()+1, min(c.Outer.Box().Right(), c.content.Box().Left()+len(*c.content.Content())+1))
+	if hasCursor {
+		if inputWithCursor != nil {
+			inputWithCursor.hasCursor = false
+		}
+		inputWithCursor = c
+		c.hasCursor = true
+	} else {
+		if inputWithCursor == c {
+			inputWithCursor = nil
+		}
+		c.hasCursor = false
+	}
+}
+
+func (c *Input) UpdateCursorPos() {
+	if c.hasCursor {
+		flextui.CursorTo(c.content.Box().Top()+1, min(c.Outer.Box().Right(), c.content.Box().Left()+len(*c.content.Content())+1))
+	}
 }

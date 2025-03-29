@@ -67,6 +67,7 @@ func main() {
 
 	input := components.NewInput()
 	input.SetContent("Input Box")
+	input.SetHasCursor(true)
 	inputArea.AddChild(input.Outer)
 
 	themesMenuArea := tui.NewComponent()
@@ -111,7 +112,7 @@ func main() {
 				input.SetContent(input.Content() + string(char))
 			}
 
-			input.Focus()
+			input.UpdateCursorPos()
 			go input.Outer.Render()
 
 			continue
@@ -123,7 +124,7 @@ func main() {
 
 		if char == 'i' {
 			tui.ShowCursor()
-			input.Focus()
+			input.UpdateCursorPos()
 			insertMode = true
 			continue
 		}
