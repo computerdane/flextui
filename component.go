@@ -121,9 +121,10 @@ func (c *Component) SetContentFunc(updateFunc func(*Box) string) {
 	c.content.updateFunc = updateFunc
 }
 
-// Set the Component's style using a function that can be called to add ANSI
-// color codes before rendering the Component's content. Pairs well with the
-// library github.com/fatih/color using a color's SprintFunc().
+// Set the Component's style using a function that can be called to add
+// ANSI color codes before rendering the Component's content. Pairs
+// well with the library [github.com/fatih/color] using a color's
+// [github.com/fatih/color.Color.SprintFunc].
 func (c *Component) SetColorFunc(colorFunc func(a ...any) string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
