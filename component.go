@@ -424,6 +424,14 @@ func (c *Component) Render() {
 	// Always hide the cursor when rendering
 	builder.WriteString("\033[?25l")
 
+	// Show the cursor again if it was previously already showing
+	defer func() {
+		if !cursorHidden {
+			ShowCursor()
+			CursorTo(cursorRow, cursorCol)
+		}
+	}()
+
 	width := c.box.Width()
 	height := c.box.Height()
 	firstBlankRow := -1                      // Will become the new value of c.firstBlankRow
@@ -455,6 +463,11 @@ func (c *Component) Render() {
 		parent = parent.parent
 	}
 
+	// Check if we are out of bounds
+	if c.box.top+startRow+height <= bounds.top || c.box.top+startRow >= bounds.bottom || c.box.left >= bounds.right {
+		return
+	}
+
 	// Construct our output line-by-line
 	for row := startRow; row < height; row++ {
 		select {
@@ -462,13 +475,13 @@ func (c *Component) Render() {
 			return
 		default:
 			// Uncomment to view rendering order and test race conditions
-			// time.Sleep(5 * time.Millisecond)
+			// time.Sleep(1 * time.Millisecond)
 		}
 
 		top := c.box.top + row
 
 		// Check if we are out of bounds
-		if top < bounds.top || top >= bounds.bottom || top+1 > bounds.bottom || c.box.left >= bounds.right {
+		if top < bounds.top || top >= bounds.bottom {
 			continue
 		}
 
@@ -562,9 +575,4 @@ Output:
 	// Output to stdout
 	fmt.Print(builder.String())
 
-	// Show the cursor again if it was previously already showing
-	if !cursorHidden {
-		ShowCursor()
-		CursorTo(cursorRow, cursorCol)
-	}
 }
