@@ -67,7 +67,7 @@ func main() {
 
 	input := components.NewInput()
 	input.SetContent("Input Box")
-	input.SetHasCursor(true)
+	tui.CursorOwner = input.Outer
 	inputArea.AddChild(input.Outer)
 
 	themesMenuArea := tui.NewComponent()

@@ -9,7 +9,11 @@ import (
 	"time"
 )
 
-var Screen *Component // Parent of all components
+// Parent of all components. Fills the entire terminal window.
+var Screen *Component
+
+// The Component that is currently allowed to modify the cursor position.
+var CursorOwner *Component
 
 var cursorHidden bool
 var cursorRow int
